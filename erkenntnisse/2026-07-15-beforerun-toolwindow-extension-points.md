@@ -3,7 +3,9 @@
 **TL;DR:** Der Extension Point für `BeforeRunTaskProvider`-Implementierungen heißt
 `stepsBeforeRunProvider` (nicht `beforeRunTaskProvider`) und nutzt das Attribut `implementation`
 (nicht `implementationClass`); zusätzlich sollte das Marketplace-Icon (`pluginIcon.svg`, 40×40)
-nie für kleine UI-Icons (Vor-Start-Liste, Tool-Window-Stripe) wiederverwendet werden.
+nie für kleine UI-Icons (Vor-Start-Liste, Tool-Window-Stripe) wiederverwendet werden. `icon` muss
+außerdem als Attribut gesetzt werden, nicht als Kind-Element, und fehlende Extension-Registrierungen
+(z.B. `notificationGroup`) scheitern lautlos zur Laufzeit statt beim Plugin-Start.
 
 ## Kontext
 
@@ -64,8 +66,36 @@ nur der eigene.
 `icons/infisical.svg` mit `width="16" height="16" viewBox="0 0 16 16"`) statt `pluginIcon.svg` zu
 recyceln.
 
+**4. `icon` muss Attribut sein, nicht Kind-Element — und `ToolWindowFactory.icon` ist keine Alternative:**
+
+`<toolWindow icon="...">` erwartet `icon` als Attribut direkt am Tag, analog zu `id`/`anchor`/
+`factoryClass`. Ein `<icon>`-Kind-Element (z.B. `<toolWindow ...><icon>/META-INF/x.svg</icon></toolWindow>`)
+wird von der Plattform ignoriert — insbesondere wenn `toolWindow` dabei zusätzlich mit `/>`
+selbst-geschlossen wird, landet das `<icon>`-Element sogar völlig losgelöst als eigenständiges
+Geschwister-Element im `<extensions>`-Block. Alternativ ließe sich vermuten, man könne das Icon
+stattdessen programmatisch über `ToolWindowFactory` liefern: Die Klasse hat tatsächlich eine
+`icon`-Property (verifiziert im Quellcode, `platform/platform-api/.../ToolWindowFactory.kt`), diese
+ist aber mit `@get:Internal` markiert — ein rein plattforminternes Implementierungsdetail. Ein
+Java-`@Override public Icon getIcon()` kompiliert zwar (die Property hat einen entsprechenden
+Getter), wird von der Tool-Window-Icon-Auflösung aber nicht berücksichtigt. Der einzige unterstützte
+Weg ist das `icon`-Attribut in der `plugin.xml`-Registrierung (`ToolWindowEP`).
+
+**5. Fehlende Extension-Registrierung scheitert lautlos zur Laufzeit, nicht beim Plugin-Start:**
+
+`NotificationGroupManager.getInstance().getNotificationGroup(id)` gibt `null` zurück, wenn die
+passende `<notificationGroup id="...">`-Registrierung in `plugin.xml` fehlt (z.B. weil sie beim
+Umbau eines `<extensions>`-Blocks versehentlich mitgelöscht wurde). Es gibt dabei keinen Fehler
+beim Plugin-Start — erst der nächste Aufruf einer Methode auf dem `null`-Ergebnis
+(`.createNotification(...)`) wirft eine `NullPointerException`, weit entfernt vom eigentlichen
+Ursprung des Problems. Genereller Fall: Fehlende oder gelöschte Extension-Registrierungen zeigen
+sich in der Regel nicht beim Laden des Plugins, sondern erst spät und schwer nachvollziehbar an der
+Aufrufstelle.
+
 ## Offene Fragen
 
-Der Icon-Fix (separates klein dimensioniertes SVG für `getIcon()`) wurde noch nicht umgesetzt —
-`InjectBeforeRunTask` und `InfisicalToolWindowFactory` verwenden im aktuellen Code-Stand weiterhin
-`pluginIcon.svg`.
+Der Icon-Fix ist inzwischen umgesetzt (`pluginIconBlackWhite.svg`, 24×24, monochrom, korrekt als
+Attribut verdrahtet). Offen ist, ob sich Tippfehler in `plugin.xml`-Extension-Registrierungen
+(falsche EP-Namen/Attribute, versehentlich gelöschte Blöcke) künftig automatisiert absichern lassen
+— z.B. durch einen Plugin-Verifier-Lauf oder einen einfachen Smoke-Test, der beim Plugin-Start alle
+erwarteten Extensions (`notificationGroup`, `toolWindow`, `stepsBeforeRunProvider`) auf Vorhandensein
+prüft, statt solche Fehler erst manuell beim Ausprobieren zu entdecken.

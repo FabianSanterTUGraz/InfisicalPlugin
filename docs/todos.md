@@ -4,15 +4,17 @@
 
 ## Inbox
 
+- [ ] #18 Browser-basierten Login-Flow für die Sidebar implementieren: bei Erstanmeldung Weiterleitung zur Infisical-Webanmeldung, Nutzer gibt Credentials einmalig im Browser ein, ein lokaler Callback-Listener (`localhost:8010`) wird temporär vom Plugin geöffnet und empfängt Access-/Refresh-Token, Speicherung über die IntelliJ PasswordSafe-API (damit erneutes Einloggen möglichst entfällt)
+
 ## Grundgerüst
 
 - [x] #2 Package/Group von `com.example` auf echten Namespace umstellen (`build.gradle.kts` group, Kotlin-Package-Struktur, plugin.xml `id`)
-- [ ] #3 `plugin.xml` mit echten Metadaten füllen (Name, Vendor, Beschreibung, since-build/until-build)
+- [x ] #3 `plugin.xml` mit echten Metadaten füllen (Name, Vendor, Beschreibung, since-build/until-build)
 
 ## Infisical-Integration
 
-- [ ] #4 Authentifizierungsmethode festlegen (Machine Identity/Universal Auth vs. Service Token) und Auth-Flow implementieren → [spec](specs/4-2026-07-14-authentifizierungsmethode-festlegen.md)
-- [ ] #5 HTTP-Client für die Infisical-REST-API implementieren (Secrets nach Projekt/Environment/Pfad abrufen) → [spec](specs/5-2026-07-14-http-client-fuer-infisical-rest-api-implementieren.md) → [erkenntnis](../erkenntnisse/2026-07-14-infisical-v4-api-endpunkt.md)
+- [x ] #4 Authentifizierungsmethode festlegen (Machine Identity/Universal Auth vs. Service Token) und Auth-Flow implementieren → [spec](specs/4-2026-07-14-authentifizierungsmethode-festlegen.md)
+- [ x] #5 HTTP-Client für die Infisical-REST-API implementieren (Secrets nach Projekt/Environment/Pfad abrufen) → [spec](specs/5-2026-07-14-http-client-fuer-infisical-rest-api-implementieren.md) → [erkenntnis](../erkenntnisse/2026-07-14-infisical-v4-api-endpunkt.md)
 - [ ] #6 Settings-Configurable anlegen: Infisical-Server-URL, Projekt-ID, Environment, Auth-Credentials konfigurierbar machen
 - [ ] #7 Zugangsdaten sicher speichern (IntelliJ PasswordSafe/CredentialStore statt Klartext in der Settings-XML)
 - [ ] #8 Geladene Secrets in Run/Debug-Konfigurationen injizieren (z.B. als Umgebungsvariablen vor Programmstart)

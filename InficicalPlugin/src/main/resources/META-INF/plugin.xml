@@ -7,6 +7,13 @@
      Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
     <name>InficicalPlugin</name>
 
+    <!-- Custom icon. -->
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow>
+            <icon>/META-INF/pluginIcon.svg</icon>
+        </toolWindow>
+    </extensions>
+
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor url="https://www.abuscom.com">Abuscom</vendor>
 
@@ -21,11 +28,22 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.json</depends>
+    <depends>com.intellij.gradle</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Configuration for your sidebar tool window -->
+        <toolWindow id="[CUSTOM]Infisical"
+                    anchor="right"
+                    factoryClass="com.abuscom.infisicalplugin.toolwindow.InfisicalToolWindowFactory"
+                    icon="/META-INF/pluginIcon.svg"/>
+    </extensions>
 
     <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
+        <stepsBeforeRunProvider
+                id="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectBeforeRunTask"
+                implementationClass="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectBeforeRunTask"/>
     </extensions>
 
     <!-- Temporäre Debug-Action zum manuellen Testen des HTTP-Wrappers/Auth-Flows in der Sandbox-IDE.

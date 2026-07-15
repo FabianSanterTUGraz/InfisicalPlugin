@@ -22,9 +22,4 @@ public final class InfisicalToolWindowFactory implements ToolWindowFactory {
         Content content = ContentFactory.getInstance().createContent(panel, "", false);
         toolWindow.getContentManager().addContent(content);
     }
-
-    @Override
-    public Icon getIcon() {
-        return IconLoader.getIcon("META-INF/pluginIcon.svg", InfisicalToolWindowFactory.class);
-    }
 }

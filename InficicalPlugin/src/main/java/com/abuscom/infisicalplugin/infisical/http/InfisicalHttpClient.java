@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class InfisicalHttpClient {
 
-    public static final String DEFAULT_BASE_URL = "https://app.infisical.com";
+    public static final String DEFAULT_BASE_URL = "https://infisical.internal.abuscom.cloud";
 
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);

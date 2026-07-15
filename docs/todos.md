@@ -12,7 +12,7 @@
 ## Infisical-Integration
 
 - [ ] #4 Authentifizierungsmethode festlegen (Machine Identity/Universal Auth vs. Service Token) und Auth-Flow implementieren → [spec](specs/4-2026-07-14-authentifizierungsmethode-festlegen.md)
-- [ ] #5 HTTP-Client für die Infisical-REST-API implementieren (Secrets nach Projekt/Environment/Pfad abrufen) → [spec](specs/5-2026-07-14-http-client-fuer-infisical-rest-api-implementieren.md)
+- [ ] #5 HTTP-Client für die Infisical-REST-API implementieren (Secrets nach Projekt/Environment/Pfad abrufen) → [spec](specs/5-2026-07-14-http-client-fuer-infisical-rest-api-implementieren.md) → [erkenntnis](../erkenntnisse/2026-07-14-infisical-v4-api-endpunkt.md)
 - [ ] #6 Settings-Configurable anlegen: Infisical-Server-URL, Projekt-ID, Environment, Auth-Credentials konfigurierbar machen
 - [ ] #7 Zugangsdaten sicher speichern (IntelliJ PasswordSafe/CredentialStore statt Klartext in der Settings-XML)
 - [ ] #8 Geladene Secrets in Run/Debug-Konfigurationen injizieren (z.B. als Umgebungsvariablen vor Programmstart)

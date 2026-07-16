@@ -30,7 +30,7 @@ Allgemeine Konventionen (Markdown, Dateinamen) → `.claude/rules/`
 
 - Commits mit `/commit`-Skill erstellen
 - **Skills/Agents/Rules nicht ungewollt projekt-lokal editieren:** `.claude/commands|agents|rules` in diesem Projekt werden bei jedem `/syncfromtemplate`-Lauf mit dem globalen Stand abgeglichen — unveränderte, veraltete Kopien werden dabei entfernt. Für allgemeine Anpassungen immer direkt in `~/.claude/...` bearbeiten (gilt dann für alle Projekte), danach mit `/synctotemplate` ins Template-Repo zurückspielen. Soll ein Skill/Agent/Rule bewusst **nur in diesem Projekt** anders verhalten, projekt-lokal eine gleichnamige Datei anlegen und die Zeile `override: true` ergänzen — `/syncfromtemplate` lässt diese Datei dann unangetastet, und Claude Code bevorzugt sie automatisch gegenüber der globalen Version.
-
+-ich bin ein Praktikant und möchte so viel wie möglich lernen bei diesem Project und ich möchte so weit möglich viel eigenständig Programmieren.
 Keine besonderen projektspezifischen Konventionen (Coding-Style, Branch-Naming, Commit-Format, Test-Strategie) über die allgemeinen Regeln hinaus.
 
 ## Aktuelle Schwerpunkte

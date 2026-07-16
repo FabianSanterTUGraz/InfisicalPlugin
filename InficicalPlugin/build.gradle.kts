@@ -20,6 +20,7 @@ dependencies {
         // Add plugin dependencies for compilation here:
         bundledPlugin("com.intellij.modules.json")
         bundledPlugin("com.intellij.gradle")
+        bundledPlugin("org.jetbrains.plugins.terminal")
     }
 }
 

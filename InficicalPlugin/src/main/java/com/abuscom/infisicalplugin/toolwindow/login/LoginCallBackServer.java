@@ -53,7 +53,7 @@ public class LoginCallBackServer {
             exchange.getResponseHeaders().set("Content-Type", "text/plain");
             exchange.sendResponseHeaders(200, successMessage.getBytes().length);
             exchange.getResponseBody().write(successMessage.getBytes());
-
+            server.stop(0);
         } finally {
             exchange.close();
         }

@@ -1,5 +1,6 @@
 package com.abuscom.infisicalplugin.toolwindow;
 
+import com.abuscom.infisicalplugin.action.LoginAction;
 import com.abuscom.infisicalplugin.action.LogoutAction;
 import com.abuscom.infisicalplugin.action.RefreshAction;
 import com.abuscom.infisicalplugin.action.SelectEnvironmentAction;
@@ -24,6 +25,7 @@ public final class InfisicalToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(Project project, ToolWindow toolWindow) {
         //das menu oben in der UI wenn man dazu machen will dann hiwe adden
         DefaultActionGroup actionGroup = new DefaultActionGroup();
+        actionGroup.add(new LoginAction());
         actionGroup.add(new LogoutAction());
         actionGroup.add(new RefreshAction());
         actionGroup.add(new SelectEnvironmentAction());

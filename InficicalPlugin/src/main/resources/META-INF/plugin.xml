@@ -30,16 +30,11 @@
                     anchor="right"
                     factoryClass="com.abuscom.infisicalplugin.toolwindow.InfisicalToolWindowFactory"
                     icon="/META-INF/pluginIconBlackWhite.svg"/>
-    </extensions>
-
-    <!-- Extensions defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
-    <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
-        <stepsBeforeRunProvider
-                id="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectBeforeRunTask"
-                implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectBeforeRunTask"/>
     </extensions>
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InterceptGradleRunConfig" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
 
     <!-- Temporäre Debug-Action zum manuellen Testen des HTTP-Wrappers/Auth-Flows in der Sandbox-IDE.
          Wird entfernt, sobald #6/#9 eine echte Settings-UI bzw. ein Tool-Window bereitstellen. -->

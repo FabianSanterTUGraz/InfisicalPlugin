@@ -1,9 +1,6 @@
 package com.abuscom.infisicalplugin.toolwindow;
 
-import com.abuscom.infisicalplugin.action.LoginAction;
-import com.abuscom.infisicalplugin.action.LogoutAction;
-import com.abuscom.infisicalplugin.action.RefreshAction;
-import com.abuscom.infisicalplugin.action.SelectEnvironmentAction;
+import com.abuscom.infisicalplugin.action.*;
 import com.abuscom.infisicalplugin.toolwindow.login.LoginPanel;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
@@ -28,6 +25,8 @@ public final class InfisicalToolWindowFactory implements ToolWindowFactory {
         actionGroup.add(new LoginAction());
         actionGroup.add(new LogoutAction());
         actionGroup.add(new RefreshAction());
+        actionGroup.add(new SelectProjectAction());
+
         actionGroup.add(new SelectEnvironmentAction());
 
         ActionToolbar toolbar = ActionManager.getInstance().createActionToolbar("Infisical Tool Window", actionGroup,true);

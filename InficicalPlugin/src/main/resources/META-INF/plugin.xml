@@ -21,6 +21,7 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.json</depends>
+    <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.gradle</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
 
@@ -31,6 +32,7 @@
                     factoryClass="com.abuscom.infisicalplugin.toolwindow.InfisicalToolWindowFactory"
                     icon="/META-INF/pluginIconBlackWhite.svg"/>
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension"/>
     </extensions>
     <applicationListeners>
         <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InterceptGradleRunConfig" topic="com.intellij.execution.ExecutionListener"/>
@@ -38,12 +40,5 @@
 
     <!-- Temporäre Debug-Action zum manuellen Testen des HTTP-Wrappers/Auth-Flows in der Sandbox-IDE.
          Wird entfernt, sobald #6/#9 eine echte Settings-UI bzw. ein Tool-Window bereitstellen. -->
-    <actions>
-        <action id="InfisicalPlugin.TestConnection"
-                class="com.abuscom.infisicalplugin.action.TestInfisicalConnectionAction"
-                text="Test Infisical Connection"
-                description="Testet Universal-Auth-Login gegen die Infisical-API">
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
-        </action>
-    </actions>
+
 </idea-plugin>

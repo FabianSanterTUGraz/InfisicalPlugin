@@ -24,10 +24,10 @@ public class SelectProjectAction extends DefaultActionGroup {
         List<String> allProjects = List.of("Project 1", "Project2");
 
         for (String project : allProjects) {
-            actions.add(new AnAction() {
+            actions.add(new AnAction(project) {
                 @Override
                 public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-
+                    //ProjectSelection.getInstance().setSelectedProject(project);
                 }
             });
         }

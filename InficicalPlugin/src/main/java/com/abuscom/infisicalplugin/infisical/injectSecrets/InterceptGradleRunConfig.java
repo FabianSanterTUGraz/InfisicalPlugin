@@ -18,6 +18,11 @@ public class InterceptGradleRunConfig implements  ExecutionListener {
         {
             if (env.getRunProfile() instanceof ExternalSystemRunConfiguration) {
                 ExternalSystemRunConfiguration gradleConfig = (ExternalSystemRunConfiguration) env.getRunProfile();
+
+                if (!InjectSecretsSettings.getOrCreate(gradleConfig).enabled) {
+                    return;
+                }
+
                 Map<String, String> currentEnvironment = new HashMap<>(gradleConfig.getSettings().getEnv());
 
                 Cache cache = Cache.getInstance();

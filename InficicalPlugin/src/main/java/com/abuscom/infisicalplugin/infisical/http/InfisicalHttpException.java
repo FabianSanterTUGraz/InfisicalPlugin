@@ -6,7 +6,7 @@ public class InfisicalHttpException extends Exception {
     private final String responseBody;
 
     public InfisicalHttpException(int statusCode, String responseBody) {
-        super("Infisical API request failed with status " + statusCode);
+        super("Infisical API request failed with status " + statusCode + "Request body" + responseBody);
         this.statusCode = statusCode;
         this.responseBody = responseBody;
     }

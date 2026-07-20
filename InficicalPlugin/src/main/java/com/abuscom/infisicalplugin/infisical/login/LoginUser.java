@@ -1,27 +1,14 @@
-package com.abuscom.infisicalplugin.action;
+package com.abuscom.infisicalplugin.infisical.login;
 
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
-import com.abuscom.infisicalplugin.infisical.login.LoginCallBackServer;
-import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
-import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.ide.BrowserUtil;
-import com.intellij.icons.AllIcons;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.ActionUpdateThread;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class LoginAction extends AnAction {
+public class LoginUser {
     public static final int LOGIN_CALLBACK_PORT = 8010;
 
-    public LoginAction() {
-        super("Login", "Mit Infisical einloggen", AllIcons.Actions.Forward);
-    }
-
-    @Override
-    public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
+    public void login() {
         LoginCallBackServer server = new LoginCallBackServer(TokenManager.getInstance());
         TokenManager.getInstance().addTokenChangeListener(new TokenChangeListener() {
             @Override
@@ -35,11 +22,6 @@ public class LoginAction extends AnAction {
         } catch (IOException ex) {
             System.err.println("Callback server exception: " + ex.getMessage());
         }
-    }
-
-    @Override
-    public @NotNull ActionUpdateThread getActionUpdateThread() {
-        return ActionUpdateThread.BGT;
     }
 
     private static String buildLoginUrl() {

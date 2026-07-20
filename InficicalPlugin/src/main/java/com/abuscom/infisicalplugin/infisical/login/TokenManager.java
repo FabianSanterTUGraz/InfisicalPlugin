@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.toolwindow.login;
+package com.abuscom.infisicalplugin.infisical.login;
 
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.CredentialAttributesKt;

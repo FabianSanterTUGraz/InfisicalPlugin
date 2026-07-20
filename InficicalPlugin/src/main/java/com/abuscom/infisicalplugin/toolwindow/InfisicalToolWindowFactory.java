@@ -1,7 +1,7 @@
 package com.abuscom.infisicalplugin.toolwindow;
 
 import com.abuscom.infisicalplugin.action.*;
-import com.abuscom.infisicalplugin.toolwindow.login.LoginPanel;
+import com.abuscom.infisicalplugin.infisical.login.LoginPanel;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
@@ -23,11 +23,6 @@ public final class InfisicalToolWindowFactory implements ToolWindowFactory {
         //das menu oben in der UI wenn man dazu machen will dann hiwe adden
         DefaultActionGroup actionGroup = new DefaultActionGroup();
         actionGroup.add(new LoginAction());
-        actionGroup.add(new LogoutAction());
-        actionGroup.add(new RefreshAction());
-        actionGroup.add(new SelectProjectAction());
-
-        actionGroup.add(new SelectEnvironmentAction());
 
         ActionToolbar toolbar = ActionManager.getInstance().createActionToolbar("Infisical Tool Window", actionGroup,true);
         SimpleToolWindowPanel panel = new SimpleToolWindowPanel(true);

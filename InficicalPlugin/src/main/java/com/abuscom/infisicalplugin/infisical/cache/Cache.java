@@ -2,7 +2,7 @@ package com.abuscom.infisicalplugin.infisical.cache;
 
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
-import com.abuscom.infisicalplugin.toolwindow.login.TokenManager;
+import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.intellij.openapi.project.Project;

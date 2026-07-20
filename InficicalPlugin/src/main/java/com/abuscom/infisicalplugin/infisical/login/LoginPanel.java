@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.toolwindow.login;
+package com.abuscom.infisicalplugin.infisical.login;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;

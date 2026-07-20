@@ -34,6 +34,7 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
             //add error message;
             return;
         }
+        //else if(TokenManager.getInstance().expired)
 
         try {
             Cache.getInstance().setCache(context);

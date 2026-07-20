@@ -38,7 +38,11 @@
         <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InterceptGradleRunConfig" topic="com.intellij.execution.ExecutionListener"/>
     </applicationListeners>
 
-    <!-- Temporäre Debug-Action zum manuellen Testen des HTTP-Wrappers/Auth-Flows in der Sandbox-IDE.
-         Wird entfernt, sobald #6/#9 eine echte Settings-UI bzw. ein Tool-Window bereitstellen. -->
+    <!-- Der extension point der direkt in den Gradle process sich dazwischenhaengt und die env setten kann. -->
+    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+        <executionHelperExtension
+                implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoGradleProcess"/>
+    </extensions>
+
 
 </idea-plugin>

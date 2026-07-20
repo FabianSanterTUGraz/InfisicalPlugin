@@ -1,5 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 import org.jetbrains.plugins.gradle.service.project.GradleExecutionHelperExtension;
@@ -22,9 +23,18 @@ import java.util.Map;
  */
 public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
     @Override
-    public void configureSettings(GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
+    public void configureSettings(@NotNull GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
     {
-        System.out.println("test");
+        if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
+            return;
+        }
+
+        if(TokenManager.getInstance().getTokenFromKeypass() == null)
+        {
+            //add error message;
+            return;
+        }
+
         try {
             Cache.getInstance().setCache(context);
         } catch (IOException e) {
@@ -33,7 +43,6 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
 
         for(Map.Entry<String,String> environmentVar : Cache.getInstance().getSecrets().entrySet())
         {
-            System.out.println("key" + environmentVar.getKey() + "value" +environmentVar.getValue());
             settings.addEnvironmentVariable(environmentVar.getKey(), environmentVar.getValue());
         }
     }

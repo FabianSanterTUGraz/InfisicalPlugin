@@ -32,7 +32,14 @@
                     factoryClass="com.abuscom.infisicalplugin.toolwindow.InfisicalToolWindowFactory"
                     icon="/META-INF/pluginIconBlackWhite.svg"/>
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension"/>
     </extensions>
+
+    <!-- Bridge: liest Checkbox + Dropdown der RunConfiguration und reicht sie an Cache weiter,
+         bevor der Gradle-Prozess startet. -->
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigListener" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
 
     <!-- Der extension point der direkt in den Gradle process sich dazwischenhaengt und die env setten kann. -->
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">

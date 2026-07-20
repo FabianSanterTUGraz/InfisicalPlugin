@@ -24,12 +24,25 @@ public class Cache {
     private Instant timeStamp = Instant.now();
     private Map<String,String> config;
     private String environment = "";
+    private boolean runConfigInjectionEnabled = false;
+    private String runConfigSelectedEnvironment;
 
     private Cache(){}
 
     public static Cache getInstance()
     {
         return INSTANCE;
+    }
+
+    public void setRunConfigSelection(boolean enabled, String selectedEnvironment)
+    {
+        this.runConfigInjectionEnabled = enabled;
+        this.runConfigSelectedEnvironment = selectedEnvironment;
+    }
+
+    public boolean isRunConfigInjectionEnabled()
+    {
+        return runConfigInjectionEnabled;
     }
 
     // make the actual secrets api call and copy .env into cache but only of the current enviroment.
@@ -40,13 +53,16 @@ public class Cache {
         String projectID = config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
         String changedEnv = environment;
-        environment = config.get("defaultEnvironment");
+
+        environment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
 
         if(changedEnv.equals(environment))
         {
             return;
         }
+
         secrets.clear();
+
         try {
             InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
             SecretClient secretsClient = new SecretClient(httpClient);

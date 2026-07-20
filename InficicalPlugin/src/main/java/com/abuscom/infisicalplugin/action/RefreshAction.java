@@ -14,8 +14,7 @@ public class RefreshAction extends  AnAction{
     }
     @Override
     public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-        Cache.getInstance().setCache("dev"); // hier noch getter vom dropdown menu
-        Cache.getInstance().printCache();
+
     }
 }
 

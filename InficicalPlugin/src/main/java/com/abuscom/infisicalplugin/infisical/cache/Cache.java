@@ -1,24 +1,29 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
-import com.abuscom.infisicalplugin.infisical.auth.AccessToken;
-import com.abuscom.infisicalplugin.infisical.auth.UniversalAuthClient;
-import com.abuscom.infisicalplugin.infisical.cache.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.toolwindow.login.TokenManager;
-import com.intellij.notification.NotificationType;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.intellij.openapi.project.Project;
+import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.intellij.platform.feedback.impl.FeedbackSurveyUtilsKt.showNotification;
+import java.util.Objects;
 
 public class Cache {
     private static final Cache INSTANCE = new Cache();
     private final Map<String,String> secrets = new HashMap<>();
     private Instant timeStamp = Instant.now();
+    private Map<String,String> config;
+    private String environment = "";
 
     private Cache(){}
 
@@ -28,18 +33,24 @@ public class Cache {
     }
 
     // make the actual secrets api call and copy .env into cache but only of the current enviroment.
-    public void setCache(String enviroment)
-    {
-        String projectID = "7f200104-3b40-4466-b2e3-6624808e9228";
-        enviroment = "dev";
+    public void setCache(GradleExecutionContext context) throws IOException {
+        Project project = context.getProject();
+        config = readConfig(project);
+
+        String projectID = config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
+        String changedEnv = environment;
+        environment = config.get("defaultEnvironment");
 
+        if(changedEnv.equals(environment))
+        {
+            return;
+        }
         secrets.clear();
-
         try {
             InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
             SecretClient secretsClient = new SecretClient(httpClient);
-            SecretsAPICallResponse response = secretsClient.secrets(projectID, enviroment,token);
+            SecretsAPICallResponse response = secretsClient.secrets(projectID, environment,token);
 
             for(SecretEntry entry : response.secrets()){
                 secrets.put(entry.secretKey(),entry.secretValue());
@@ -48,6 +59,13 @@ public class Cache {
         catch (InfisicalHttpException e) {
             System.out.println("Error in fetching the secrets!!");
         }
+    }
+
+    public static Map<String,String> readConfig(Project project) throws IOException
+    {
+        Path configPath = Paths.get(Objects.requireNonNull(project.getBasePath()),".infisical.json");
+        String JSON = Files.readString(configPath);
+        return new Gson().fromJson(JSON,new TypeToken<Map<String, String>>(){}.getType());
     }
 
     public Map<String,String> getSecrets()

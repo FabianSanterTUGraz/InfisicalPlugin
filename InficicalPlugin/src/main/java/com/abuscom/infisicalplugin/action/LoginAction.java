@@ -28,10 +28,6 @@ public class LoginAction extends AnAction {
             @Override
             public void onTokenChanged(String token) {
                 TokenManager.getInstance().removeTokenChangeListener(this);
-                if (token != null) {
-                    Cache.getInstance().setCache("dev");
-                    Cache.getInstance().printCache();
-                }
             }
         });
         try {

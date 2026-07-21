@@ -32,8 +32,11 @@ prepare:
 
 test:
   extends: .base
+  image: eclipse-temurin:21-jdk-jammy
   stage: validate
   needs: [prepare]
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git xvfb
   cache:
     key:
       files:
@@ -45,7 +48,7 @@ test:
     policy: pull
   script:
     - cd InfisicalPlugin
-    - ./gradlew test
+    - xvfb-run --auto-servernum ./gradlew test
   artifacts:
     when: always
     reports:

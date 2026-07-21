@@ -5,6 +5,7 @@ import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallResponse;
 import com.abuscom.infisicalplugin.infisical.cache.EnvironmentEntry;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.openapi.application.ApplicationManager;
@@ -22,7 +23,7 @@ import javax.swing.JPanel;
 import java.awt.FlowLayout;
 import java.io.IOException;
 
-public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> {
+public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
     private final JCheckBox enabledCheckBox = new JCheckBox("Infisical Secrets in diese Run Configuration injizieren");
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
@@ -30,6 +31,25 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
     public InjectSecretsSettingsEditor() {
         loginButton.addActionListener(e -> new LoginUser().login());
+        TokenManager.getInstance().addTokenChangeListener(this);
+        updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
+    }
+
+    @Override
+    public void onTokenChanged(String newToken) {
+        updateLoginButtonVisibility(newToken);
+    }
+
+    private void updateLoginButtonVisibility(String token) {
+        loginButton.setVisible(token == null);
+        loginButton.revalidate();
+        loginButton.repaint();
+    }
+
+    @Override
+    protected void disposeEditor() {
+        TokenManager.getInstance().removeTokenChangeListener(this);
+        super.disposeEditor();
     }
 
     @Override

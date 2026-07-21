@@ -2,7 +2,7 @@
 # Kontext für Claude
 
 <!-- Kurze Projektbeschreibung: Name und Zweck in 1-2 Sätzen -->
-InficicalPlugin — IntelliJ-Platform-Plugin zur Integration von Infisical (Secrets-Management).
+InfisicalPlugin — IntelliJ-Platform-Plugin zur Integration von Infisical (Secrets-Management).
 
 ## Beim Start
 

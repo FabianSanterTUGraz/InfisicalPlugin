@@ -24,6 +24,5 @@ class UniversalAuthClientIntegrationTest {
 
         assertNotNull(token.value());
         assertFalse(token.value().isBlank());
-        assertFalse(token.isExpired());
     }
 }

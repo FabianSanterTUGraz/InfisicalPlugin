@@ -29,7 +29,6 @@ public class UniversalAuthClient {
         );
 
         UniversalAuthLoginResponse loginResponse = gson.fromJson(response.body(), UniversalAuthLoginResponse.class);
-        Instant expiresAt = Instant.now().plusSeconds(loginResponse.expiresIn());
-        return new AccessToken(loginResponse.accessToken(), expiresAt);
+        return new AccessToken(loginResponse.accessToken());
     }
 }

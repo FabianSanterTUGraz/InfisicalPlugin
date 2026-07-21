@@ -5,7 +5,6 @@ import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.google.gson.Gson;
 
-import java.time.Instant;
 import java.util.Map;
 
 public class UniversalAuthClient {

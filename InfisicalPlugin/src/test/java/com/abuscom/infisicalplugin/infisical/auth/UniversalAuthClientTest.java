@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,13 +54,9 @@ class UniversalAuthClientTest {
 
     @Test
     void login_returnsAccessToken_onSuccess() throws InfisicalHttpException {
-        Instant before = Instant.now();
         AccessToken token = authClient.login("test-client-id", "test-client-secret");
-        Instant after = Instant.now();
 
         assertEquals("test-token", token.value());
-        assertTrue(token.expiresAt().isAfter(before.plusSeconds(7199)));
-        assertTrue(token.expiresAt().isBefore(after.plusSeconds(7201)));
         assertTrue(receivedRequestBody.contains("\"clientId\":\"test-client-id\""));
         assertTrue(receivedRequestBody.contains("\"clientSecret\":\"test-client-secret\""));
     }

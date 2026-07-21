@@ -25,12 +25,7 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
     @Override
     public void configureSettings(@NotNull GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
     {
-        if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
-            return;
-        }
-
-        if(!TokenManager.getInstance().isTokenValid())
-        {
+        if (!Cache.getInstance().isRunConfigInjectionEnabled() || !TokenManager.getInstance().isTokenValid()) {
             return;
         }
 

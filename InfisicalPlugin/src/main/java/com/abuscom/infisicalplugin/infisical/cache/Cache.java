@@ -94,11 +94,6 @@ public class Cache {
         return timeStamp;
     }
 
-    public void clearCache()
-    {
-        secrets.clear();
-    }
-
     //security issue nur debug:
     public void printCache()
     {

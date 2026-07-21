@@ -1,4 +1,4 @@
-# InficicalPlugin
+# InfisicalPlugin
 
 IntelliJ-Platform-Plugin zur Integration von [Infisical](https://infisical.com/) (Secrets-Management)
 in die IDE — Secrets werden über die Infisical-REST-API geladen und nutzbar gemacht.

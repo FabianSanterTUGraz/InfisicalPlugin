@@ -29,12 +29,10 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
             return;
         }
 
-        if(TokenManager.getInstance().getTokenFromKeypass() == null)
+        if(!TokenManager.getInstance().isTokenValid())
         {
-            //add error message;
             return;
         }
-        //else if(TokenManager.getInstance().expired)
 
         try {
             Cache.getInstance().setCache(context);

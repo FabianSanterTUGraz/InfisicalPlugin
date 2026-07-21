@@ -1,13 +1,18 @@
 package com.abuscom.infisicalplugin.infisical.login;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.CredentialAttributesKt;
 import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.credentialStore.Credentials;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import java.util.Base64;
 
 public class TokenManager {
     private static final TokenManager INSTANCE = new TokenManager();
@@ -62,5 +67,20 @@ public class TokenManager {
         for (TokenChangeListener listener : listeners) {
             listener.onTokenChanged(token);
         }
+    }
+
+    public boolean isTokenValid()
+    {
+        if(TokenManager.getInstance().getTokenFromKeypass() == null)
+        {
+            return false;
+        }
+        String[] tokenParts = TokenManager.getInstance().getTokenFromKeypass().split("\\.");
+        byte[] decoded= Base64.getUrlDecoder().decode(tokenParts[1]);
+        String jsonRepresentation = new String(decoded, StandardCharsets.UTF_8);
+        JsonObject payload = JsonParser.parseString(jsonRepresentation).getAsJsonObject();
+        long exp = payload.get("exp").getAsLong();
+        System.out.println("zeit1"+ exp + "unix zeit" + Instant.now().getEpochSecond());
+        return exp >= Instant.now().getEpochSecond();
     }
 }

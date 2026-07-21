@@ -10,8 +10,9 @@ stages:
     GIT_DEPTH : "1"
     GRADLE_USER_HOME: $CI_PROJECT_DIR/.gradle
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
 
 prepare:
   extends: .base

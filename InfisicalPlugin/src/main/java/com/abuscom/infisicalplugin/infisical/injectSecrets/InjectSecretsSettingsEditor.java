@@ -9,6 +9,7 @@ import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.ui.ComboBox;
 
@@ -28,22 +29,12 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private final JCheckBox enabledCheckBox = new JCheckBox("Infisical Secrets in diese Run Configuration injizieren");
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final JButton loginButton = new JButton("Login");
+    private RunConfigurationBase<?> configuration;
 
     public InjectSecretsSettingsEditor() {
         loginButton.addActionListener(e -> new LoginUser().login());
         TokenManager.getInstance().addTokenChangeListener(this);
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
-    }
-
-    @Override
-    public void onTokenChanged(String newToken) {
-        updateLoginButtonVisibility(newToken);
-    }
-
-    private void updateLoginButtonVisibility(String token) {
-        loginButton.setVisible(token == null);
-        loginButton.revalidate();
-        loginButton.repaint();
     }
 
     @Override
@@ -53,10 +44,35 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     }
 
     @Override
+    public void onTokenChanged(String newToken) {
+        updateLoginButtonVisibility(newToken);
+        if (newToken != null) {
+            loadEnvironments();
+        }
+    }
+
+    private void updateLoginButtonVisibility(String token) {
+        loginButton.setVisible(token == null);
+        loginButton.revalidate();
+        loginButton.repaint();
+    }
+
+    @Override
     protected void resetEditorFrom(@NotNull RunConfigurationBase<?> configuration) {
+        this.configuration = configuration;
+
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
         enabledCheckBox.setSelected(settings.enabled);
         environmentComboBox.setSelectedItem(settings.selectedEnvironment);
+
+        loadEnvironments();
+    }
+
+    private void loadEnvironments() {
+        if (configuration == null) {
+            return;
+        }
+        InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
@@ -66,9 +82,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             EnviromentsAPICallResponse response;
             try {
                 response = environmentsClient.enviroments(configuration.getProject(), token);
-            } catch (InfisicalHttpException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
+            } catch (InfisicalHttpException | IOException e) {
                 throw new RuntimeException(e);
             }
             String[] fetched = response.workspace().environments().stream()
@@ -78,13 +92,12 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             ApplicationManager.getApplication().invokeLater(() -> {
                 environmentComboBox.removeAllItems();
                 for (String env : fetched) {
-                    System.out.println("die envs :" + env);
                     environmentComboBox.addItem(env);
                 }
                 environmentComboBox.setSelectedItem(settings.selectedEnvironment);
-            });
+            }, ModalityState.any());
         });
-        }
+    }
 
     @Override
     protected void applyEditorTo(@NotNull RunConfigurationBase<?> configuration) {

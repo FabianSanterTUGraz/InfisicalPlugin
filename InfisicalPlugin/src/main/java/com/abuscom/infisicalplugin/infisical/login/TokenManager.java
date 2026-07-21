@@ -64,7 +64,7 @@ public class TokenManager {
     }
 
     private void notifyListeners(String token) {
-        for (TokenChangeListener listener : listeners) {
+        for (TokenChangeListener listener : new ArrayList<>(listeners)) {
             listener.onTokenChanged(token);
         }
     }

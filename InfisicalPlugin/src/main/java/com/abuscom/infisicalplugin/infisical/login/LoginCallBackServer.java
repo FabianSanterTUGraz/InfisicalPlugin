@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 public class LoginCallBackServer {
     public final int PORT = LoginPanel.LOGIN_CALLBACK_PORT;
-    private HttpServer server;
+    private static HttpServer server;
     private String jwtToken;
     private String email;
     private final TokenManager tokenManager;
@@ -21,10 +21,21 @@ public class LoginCallBackServer {
     }
 
     public void startServer() throws IOException {
+        if(server != null)
+        {
+            server.stop(0);
+        }
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", PORT), 0);
         server.createContext("/", this::handle);
         server.setExecutor(null);
         server.start();
+    }
+
+    public void stopServer()
+    {
+        if(server != null) {
+            server.stop(0);
+        }
     }
 
     public void handle(HttpExchange exchange) throws IOException {

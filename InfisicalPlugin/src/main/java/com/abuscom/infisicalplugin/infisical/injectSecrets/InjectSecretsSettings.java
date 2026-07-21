@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class InjectSecretsSettings {
 
-    public static String[] ENVIRONMENTS = {"dev", "staging", "prod"};
+    public static String[] ENVIRONMENTS = {"LOGIN PLEASE.."};
 
     public static final Key<InjectSecretsSettings> KEY =
             Key.create("com.abuscom.infisicalplugin.InjectSecretsSettings");

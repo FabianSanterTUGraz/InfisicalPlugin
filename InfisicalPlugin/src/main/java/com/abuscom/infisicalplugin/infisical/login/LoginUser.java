@@ -1,6 +1,7 @@
 package com.abuscom.infisicalplugin.infisical.login;
 
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
+import com.abuscom.infisicalplugin.infisical.login.LoginCallBackServer;
 import com.intellij.ide.BrowserUtil;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ public class LoginUser {
             BrowserUtil.browse(buildLoginUrl());
         } catch (IOException ex) {
             System.err.println("Callback server exception: " + ex.getMessage());
+            //server.stopServer();
         }
     }
 

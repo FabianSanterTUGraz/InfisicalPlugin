@@ -1,33 +1,50 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.example.InficicalPlugin</id>
+    <id>com.abuscom.infisicalplugin.InficicalPlugin</id>
 
     <!-- Public plugin name should be written in Title Case.
      Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
     <name>InficicalPlugin</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor url="https://www.abuscom.com">Abuscom</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
         Enter short description for your plugin here.<br>
         <em>most HTML tags may be used</em>
+
         ]]></description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.json</depends>
-    <depends>org.jetbrains.kotlin</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>com.intellij.gradle</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
 
-
-    <!-- Extensions defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <!-- Configuration for your sidebar tool window -->
+        <toolWindow id="[CUSTOM]Infisical"
+                    anchor="right"
+                    factoryClass="com.abuscom.infisicalplugin.toolwindow.InfisicalToolWindowFactory"
+                    icon="/META-INF/pluginIconBlackWhite.svg"/>
+        <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension"/>
     </extensions>
-    <extensions defaultExtensionNs="org.jetbrains.kotlin">
-        <supportsKotlinPluginMode supportsK2="true"/>
+
+    <!-- Bridge: liest Checkbox + Dropdown der RunConfiguration und reicht sie an Cache weiter,
+         bevor der Gradle-Prozess startet. -->
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigListener" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
+
+    <!-- Der extension point der direkt in den Gradle process sich dazwischenhaengt und die env setten kann. -->
+    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+        <executionHelperExtension
+                implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoGradleProcess"/>
     </extensions>
+
 </idea-plugin>

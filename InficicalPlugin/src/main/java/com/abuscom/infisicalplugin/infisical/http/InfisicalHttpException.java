@@ -1,0 +1,27 @@
+package com.abuscom.infisicalplugin.infisical.http;
+
+public class InfisicalHttpException extends Exception {
+
+    private final int statusCode;
+    private final String responseBody;
+
+    public InfisicalHttpException(int statusCode, String responseBody) {
+        super("Infisical API request failed with status " + statusCode + "Request body" + responseBody);
+        this.statusCode = statusCode;
+        this.responseBody = responseBody;
+    }
+
+    public InfisicalHttpException(String message, Throwable cause) {
+        super(message, cause);
+        this.statusCode = -1;
+        this.responseBody = null;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
+    }
+}

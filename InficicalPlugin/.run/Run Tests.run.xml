@@ -1,0 +1,34 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Tests" type="GradleRunConfiguration" factoryName="Gradle">
+    <log_file alias="idea.log" path="$PROJECT_DIR$/.intellijPlatform/sandbox/*/*/log-test/idea.log" show_all="true" />
+    <ExternalSystemSettings>
+      <option name="env">
+        <map>
+          <entry key="INFISICAL_TEST_CLIENT_ID" value="123" />
+          <entry key="INFISICAL_TEST_CLIENT_SECRET" value="123" />
+        </map>
+      </option>
+      <option name="executionName" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$/InficicalPlugin" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="" />
+      <option name="taskDescriptions">
+        <list />
+      </option>
+      <option name="taskNames">
+        <list>
+          <option value="check" />
+        </list>
+      </option>
+      <option name="vmOptions" value="" />
+    </ExternalSystemSettings>
+    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+    <DebugAllEnabled>false</DebugAllEnabled>
+    <RunAsTest>true</RunAsTest>
+    <GradleProfilingDisabled>false</GradleProfilingDisabled>
+    <GradleCoverageDisabled>false</GradleCoverageDisabled>
+    <method v="2" />
+  </configuration>
+</component>

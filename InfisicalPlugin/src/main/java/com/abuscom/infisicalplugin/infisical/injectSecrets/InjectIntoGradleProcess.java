@@ -1,6 +1,7 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
+import com.intellij.execution.process.ProcessOutputType;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
@@ -39,7 +40,7 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
             if(task != null) {
                 task.cancel();
             }
-            context.getListener().onTaskOutput(context.getTaskId(), "[PLUGIN]: Not able to run(no valid token given)\n", true);
+            context.getListener().onTaskOutput(context.getTaskId(), "[PLUGIN]: Not able to run(no valid token given)\n", ProcessOutputType.STDOUT);
             return;
         }
         else if (!Cache.getInstance().isRunConfigInjectionEnabled()) {

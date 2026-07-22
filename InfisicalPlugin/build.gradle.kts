@@ -22,6 +22,7 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.gradle")
         bundledPlugin("org.jetbrains.plugins.terminal")
+        bundledPlugin("JavaScript")
     }
 }
 
@@ -34,3 +35,14 @@ tasks.test {
 intellijPlatform {
     instrumentCode = false
 }
+
+intellijPlatformTesting {
+    runIde {
+        register("runIdeTestJavascript") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/test-javascript")
+            }
+        }
+    }
+}
+

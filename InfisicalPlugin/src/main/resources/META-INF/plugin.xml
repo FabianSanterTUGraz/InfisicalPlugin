@@ -51,4 +51,6 @@
                 implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoGradleProcess"/>
     </extensions>
 
+    <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
+
 </idea-plugin>

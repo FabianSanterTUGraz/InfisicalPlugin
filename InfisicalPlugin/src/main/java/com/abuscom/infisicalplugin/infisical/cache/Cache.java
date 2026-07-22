@@ -52,24 +52,33 @@ public class Cache {
 
         String projectID = config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
-        String changedEnv = environment;
+        String newEnvironment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
 
-        environment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
+        applyEnvironment(projectID, newEnvironment, token, new SecretClient(new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL)));
+    }
 
-        if(changedEnv.equals(environment))
-        {
+    /**
+     * Switches the cached environment and, if it actually changed, drops the previous
+     * environment's secrets before fetching the new one's - so a run against environment B never
+     * still sees leftover keys from an earlier run against environment A. Deliberately free of any
+     * Project/GradleExecutionContext dependency so it's directly testable in plain JUnit (see
+     * CacheEnvironmentSwitchTest) without needing a running IntelliJ Platform Application.
+     */
+    void applyEnvironment(String projectID, String newEnvironment, String token, SecretClient secretClient) {
+        String previousEnvironment = environment;
+        environment = newEnvironment;
+
+        if (previousEnvironment.equals(newEnvironment)) {
             return;
         }
 
         secrets.clear();
 
         try {
-            InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
-            SecretClient secretsClient = new SecretClient(httpClient);
-            SecretsAPICallResponse response = secretsClient.secrets(projectID, environment,token);
+            SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
 
-            for(SecretEntry entry : response.secrets()){
-                secrets.put(entry.secretKey(),entry.secretValue());
+            for (SecretEntry entry : response.secrets()) {
+                secrets.put(entry.secretKey(), entry.secretValue());
             }
         }
         catch (InfisicalHttpException e) {

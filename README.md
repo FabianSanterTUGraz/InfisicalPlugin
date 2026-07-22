@@ -2,15 +2,19 @@
 
 ## Installation
 
-1. Neuste Version aus dem öffentlichen Git-Repository klonen:
+1. In der IDE: **File > Settings > Plugins** → Zahnrad-Symbol (⚙) oben rechts → **Manage Plugin Repositories...**
 
-   ```bash
-   git clone https://gitlab.abuscom.cloud/fabian.santer/plugin_distribution
+2. Über `+` folgende URL eintragen (einmalig):
+
+   ```
+   https://<eure-pages-url>/updatePlugins.xml
    ```
 
-2. In der IDE: **File > Settings > Plugins** → Zahnrad-Symbol oben rechts → **Install Plugin from Disk...**
-![Alt-Text](ExampleScreenshots/woinstallieren.png)
-3. IDE neu starten und prüfen, ob das Plugin unter **Plugins** aufgeführt wird.
+3. Im Reiter **Marketplace** nach `InfisicalPlugin` suchen und **Install** klicken.
+
+4. IDE neu starten und prüfen, ob das Plugin unter **Plugins** aufgeführt wird.
+
+Zukünftige Updates werden ab dann automatisch von der IDE erkannt und müssen nicht mehr manuell nachinstalliert werden.
 
 ## Konfiguration: `.infisical.json`
 

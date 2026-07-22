@@ -1,5 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.cache.CurrentEnviroments;
 import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallResponse;
 import com.abuscom.infisicalplugin.infisical.cache.EnvironmentEntry;
@@ -8,6 +9,7 @@ import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
@@ -29,10 +31,12 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private final JCheckBox enabledCheckBox = new JCheckBox("Infisical Secrets in diese Run Configuration injizieren");
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final JButton loginButton = new JButton("Login");
+    private final JButton refreshButton = new JButton("Refresh", AllIcons.Actions.BuildLoadChanges);
     private RunConfigurationBase<?> configuration;
 
     public InjectSecretsSettingsEditor() {
         loginButton.addActionListener(e -> new LoginUser().login());
+        refreshButton.addActionListener(e-> Cache.getInstance().clearCache());
         TokenManager.getInstance().addTokenChangeListener(this);
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
     }
@@ -55,6 +59,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         loginButton.setVisible(token == null);
         loginButton.revalidate();
         loginButton.repaint();
+
+        refreshButton.setVisible(token != null);
+        refreshButton.revalidate();
+        refreshButton.repaint();
     }
 
     @Override
@@ -115,6 +123,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         panel.add(enabledCheckBox);
         panel.add(environmentComboBox);
         panel.add(loginButton);
+        panel.add(refreshButton);
         return panel;
     }
 }

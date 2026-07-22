@@ -8,11 +8,12 @@ import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile;
 import com.intellij.javascript.nodejs.execution.NodeTargetRun;
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension;
 import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigurationLaunchSession;
+import com.intellij.openapi.options.SettingsEditor;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
+import org.jdom.Element;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 /**
@@ -29,16 +30,40 @@ public class InjectIntoNpmProcess extends AbstractNodeRunConfigurationExtension 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public <P extends AbstractNodeTargetRunProfile> SettingsEditor<P> createEditor(@NotNull P configuration) {
+        return (SettingsEditor<P>) (SettingsEditor<?>) new InjectSecretsSettingsEditor();
+    }
+
+    @Override
+    public String getEditorTitle() {
+        return "Infisical";
+    }
+
+    @Override
+    protected void readExternal(@NotNull AbstractNodeTargetRunProfile configuration, @NotNull Element element) {
+        InjectSecretsSettings.readExternal(configuration, element);
+    }
+
+    @Override
+    protected void writeExternal(@NotNull AbstractNodeTargetRunProfile configuration, @NotNull Element element) {
+        InjectSecretsSettings.writeExternal(configuration, element);
+    }
+
+    @Override
     public NodeRunConfigurationLaunchSession createLaunchSession(
             @NotNull AbstractNodeTargetRunProfile configuration,
             @NotNull ExecutionEnvironment environment) throws ExecutionException {
         return new NodeRunConfigurationLaunchSession() {
             @Override
             public void addNodeOptionsTo(@NotNull NodeTargetRun targetRun) throws ExecutionException {
-                //Cache.getInstance().setCache();
-                Map<String,String> test = Cache.getInstance().getSecrets();
-                EnvironmentVariablesData data = EnvironmentVariablesData.create(test,true);
-                targetRun.configureEnvironment(data);
+                try {
+                    Cache.getInstance().setCache(targetRun.getProject());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                EnvironmentVariablesData data = EnvironmentVariablesData.create(Cache.getInstance().getSecrets(),true);
+                targetRun.setEnvData(data);
             }
         };
     }

@@ -48,7 +48,7 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
         }
 
         try {
-            Cache.getInstance().setCache(context);
+            Cache.getInstance().setCache(context.getProject());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -7,6 +7,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
+import com.intellij.openapi.project.Project;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,8 +47,7 @@ public class Cache {
     }
 
     // make the actual secrets api call and copy .env into cache but only of the current enviroment.
-    public void setCache(GradleExecutionContext context) throws IOException {
-        Project project = context.getProject();
+    public void setCache(Project project) throws IOException {
         config = readConfig(project);
 
         String projectID = config.get("workspaceId");
@@ -98,9 +98,10 @@ public class Cache {
         return secrets;
     }
 
-    public Instant getTimeStamp()
+    public void clearCache()
     {
-        return timeStamp;
+        environment = "";
+        Cache.getInstance().getSecrets().clear();
     }
 
     //security issue nur debug:

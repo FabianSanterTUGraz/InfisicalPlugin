@@ -21,10 +21,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public class InjectSecretsRunConfigurationExtension extends RunConfigurationExtension {
 
-    private static final String ELEMENT_NAME = "InfisicalSecretsInjection";
-    private static final String ATTR_ENABLED = "enabled";
-    private static final String ATTR_ENVIRONMENT = "environment";
-
     @Override
     public boolean isApplicableFor(@NotNull RunConfigurationBase<?> configuration) {
         return configuration instanceof ExternalSystemRunConfiguration;
@@ -48,21 +44,12 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
 
     @Override
     protected void readExternal(@NotNull RunConfigurationBase<?> configuration, @NotNull Element element) {
-        Element child = element.getChild(ELEMENT_NAME);
-        InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
-        settings.enabled = child != null && Boolean.parseBoolean(child.getAttributeValue(ATTR_ENABLED, "false"));
-        settings.selectedEnvironment = child != null
-                ? child.getAttributeValue(ATTR_ENVIRONMENT, InjectSecretsSettings.ENVIRONMENTS[0])
-                : InjectSecretsSettings.ENVIRONMENTS[0];
+        InjectSecretsSettings.readExternal(configuration, element);
     }
 
     @Override
     protected void writeExternal(@NotNull RunConfigurationBase<?> configuration, @NotNull Element element) {
-        InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
-        Element child = new Element(ELEMENT_NAME);
-        child.setAttribute(ATTR_ENABLED, String.valueOf(settings.enabled));
-        child.setAttribute(ATTR_ENVIRONMENT, settings.selectedEnvironment);
-        element.addContent(child);
+        InjectSecretsSettings.writeExternal(configuration, element);
     }
 
     @Override

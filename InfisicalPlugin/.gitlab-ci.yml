@@ -36,7 +36,7 @@ test:
   stage: validate
   needs: [prepare]
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git xvfb
+    - apt-get update && apt-get install -y --no-install-recommends git xvfb libxtst6 libxi6 libxrender1
   cache:
     key:
       files:

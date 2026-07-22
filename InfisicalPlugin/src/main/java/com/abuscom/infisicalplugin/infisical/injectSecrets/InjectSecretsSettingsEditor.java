@@ -72,12 +72,15 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         if (configuration == null) {
             return;
         }
+        String token = TokenManager.getInstance().getTokenFromKeypass();
+        if (token == null) {
+            return;
+        }
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
             CurrentEnviroments environmentsClient = new CurrentEnviroments(httpClient);
-            String token = TokenManager.getInstance().getTokenFromKeypass();
 
             EnviromentsAPICallResponse response;
             try {

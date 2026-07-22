@@ -1,39 +1,50 @@
-# InfisicalPlugin
+# Plugin Installation & Nutzung
 
-IntelliJ-Platform-Plugin zur Integration von [Infisical](https://infisical.com/) (Secrets-Management)
-in die IDE — Secrets werden über die Infisical-REST-API geladen und nutzbar gemacht.
-Authentifizierung erfolgt über Machine Identity / Universal Auth.
+## Installation
 
-## Setup
+1. Neuste Version aus dem öffentlichen Git-Repository klonen:
 
-```bash
-# Bauen (lädt Dependencies, kompiliert, führt Tests aus)
-./gradlew build
+   ```bash
+   git clone https://gitlab.abuscom.cloud/fabian.santer/plugin_distribution
+   ```
 
-# Nur Tests ausführen
-./gradlew test
+2. In der IDE: **File > Settings > Plugins** → Zahnrad-Symbol oben rechts → **Install Plugin from Disk...**
+![Alt-Text](ExampleScreenshots/woinstallieren.png)
+3. IDE neu starten und prüfen, ob das Plugin unter **Plugins** aufgeführt wird.
 
-# Plugin in einer Sandbox-IDE starten
-./gradlew runIde
+## Konfiguration: `.infisical.json`
+
+Damit das Plugin funktioniert, muss im Projekt-Root eine `.infisical.json`-Datei mit folgendem Format vorhanden sein:
+
+```json
+{
+  "workspaceId": "...…..-....-....-....-............",
+  "defaultEnvironment": "dev",
+  "gitBranchToEnvironmentMapping": null
+}
 ```
 
-## Stand
+Diese Datei wird über folgenden Befehl erzeugt:
 
-- **Fertig:** HTTP-Wrapper (`infisical.http`) und Universal-Auth-Login (`infisical.auth`) gegen
-  die Infisical-API, inkl. Unit- und Integrationstests.
-- **Offen:** Secrets-Abruf nach Projekt/Environment/Pfad, Settings-UI, sichere Speicherung der
-  Credentials, Anzeige/Injection der Secrets. Siehe `docs/todos.md` für den vollständigen Stand.
+```bash
+infisical init
+```
 
-### Dev-Tooling
+Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen.
 
-Über **Tools → Test Infisical Connection** in der Sandbox-IDE lässt sich der Universal-Auth-Login
-manuell gegen die echte Infisical-API testen (Client ID/Secret eingeben, Ergebnis erscheint als
-Notification). Das ist eine temporäre Debug-Action und kein Nutzer-Feature — sie wird entfernt,
-sobald eine echte Settings-UI/Tool-Window existiert.
+> **Hinweis:** Diese Datei enthält keine sensiblen Daten und kann daher problemlos ins Repository eingecheckt werden.
 
-## Claude-Workflow
+## Für Gradle
 
-Dieses Projekt verwendet einen strukturierten Claude-Workflow.
-Siehe `CLAUDE.md` für Kontext und Konventionen.
+1. Bestehende Gradle-Run-Configuration aktivieren: Drei-Punkte-Menü neben dem Debug-Symbol → **Edit Configurations** → 
+**Modify Options** → Haken bei **Infisical** setzen.
 
-Projektübersicht in Claude abrufen: `/abc-teamwork`
+   ![Alt-Text](ExampleScreenshots/pluginAktivieren.png)
+2. Danach erscheinen die Login-Option sowie eine Checkbox, mit der Infisical aktiviert oder pausiert werden kann.
+   ![Alt-Text](ExampleScreenshots/dropdownmenu.png)
+3. Über das Login-Feld wirst du zur Login-Seite weitergeleitet, auf der du dich mit deinen Zugangsdaten anmeldest.
+   ![Alt-Text](ExampleScreenshots/login.png)
+
+4. Nach dem Login kannst du über das Dropdown-Menü die gewünschte Umgebung (Environment) auswählen.
+
+Sobald das Plugin aktiviert ist, können Gradle-Projekte wie gewohnt über **Run** gestartet werden. Lokale Environment-Dateien können vollständig aus dem Projektordner gelöscht werden, da die Werte jetzt über Infisical bereitgestellt werden.

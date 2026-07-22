@@ -81,6 +81,11 @@ public class TokenManager {
         JsonObject payload = JsonParser.parseString(jsonRepresentation).getAsJsonObject();
         long exp = payload.get("exp").getAsLong();
         System.out.println("zeit1"+ exp + "unix zeit" + Instant.now().getEpochSecond());
-        return exp >= Instant.now().getEpochSecond();
+        if (exp < Instant.now().getEpochSecond())
+        {
+            TokenManager.getInstance().clearKeypass();
+            return false;
+        }
+        return true;
     }
 }

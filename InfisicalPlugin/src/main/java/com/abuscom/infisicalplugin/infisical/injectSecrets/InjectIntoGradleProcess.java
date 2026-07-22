@@ -1,6 +1,11 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
+import com.intellij.notification.NotificationType;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
+import com.intellij.openapi.externalSystem.service.internal.ExternalSystemProcessingManager;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 import org.jetbrains.plugins.gradle.service.project.GradleExecutionHelperExtension;
@@ -8,8 +13,10 @@ import org.jetbrains.plugins.gradle.settings.GradleExecutionSettings;
 
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 
+import javax.management.Notification;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Hookt sich über den Erweiterungspunkt {@code org.jetbrains.plugins.gradle.executionHelperExtension}
@@ -25,7 +32,17 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
     @Override
     public void configureSettings(@NotNull GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
     {
-        if (!Cache.getInstance().isRunConfigInjectionEnabled() || !TokenManager.getInstance().isTokenValid()) {
+
+        if (!TokenManager.getInstance().isTokenValid()) {
+            ExternalSystemTaskId id = context.getTaskId();
+            ExternalSystemTask task = ExternalSystemProcessingManager.getInstance().findTask(id);
+            if(task != null) {
+                task.cancel();
+            }
+            context.getListener().onTaskOutput(context.getTaskId(), "[PLUGIN]: Not able to run(no valid token given)\n", true);
+            return;
+        }
+        else if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
             return;
         }
 

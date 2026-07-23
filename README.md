@@ -54,10 +54,12 @@ Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen
 Sobald das Plugin aktiviert ist, können Gradle-Projekte wie gewohnt über **Run** gestartet werden. Lokale Environment-Dateien können vollständig aus dem Projektordner gelöscht werden, da die Werte jetzt über Infisical bereitgestellt werden.
 
 
-##Für npm
+## Für npm
 
-1.Aktivierung bleibt die gleich jedoch muss Infisical nicht manuell aktiviert werden sondern kann direkt über den Reiter **Infisical** neben **Brower / Live Edit** aufgerufen werden.
+Steuerung bleibt die gleich jedoch muss Infisical nicht manuell aktiviert werden sondern kann direkt über den Reiter **Infisical** neben **Brower / Live Edit** aufgerufen werden.
+   ![Alt-Text](ExampleScreenshots/howtoNPM.png)
 
+Nach aktivierung sind die Schritte die selbe wie bei Gradle.
 > Ausführung über das terminal via npm start wird nicht unterstützt! 
 
-##Für Maven
+## Für Maven

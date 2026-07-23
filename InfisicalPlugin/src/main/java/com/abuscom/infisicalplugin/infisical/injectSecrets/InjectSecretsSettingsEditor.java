@@ -10,6 +10,8 @@ import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.icons.AllIcons;
+import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
@@ -36,7 +38,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
     public InjectSecretsSettingsEditor() {
         loginButton.addActionListener(e -> new LoginUser().login());
-        refreshButton.addActionListener(e-> Cache.getInstance().clearCache());
+        refreshButton.addActionListener(e -> {
+            Cache.getInstance().clearCache();
+            loadEnvironments();
+        });
         TokenManager.getInstance().addTokenChangeListener(this);
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
     }
@@ -80,10 +85,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         if (configuration == null) {
             return;
         }
-        String token = TokenManager.getInstance().getTokenFromKeypass();
-        if (token == null) {
+        if (!TokenManager.getInstance().isTokenValid()) {
             return;
         }
+        String token = TokenManager.getInstance().getTokenFromKeypass();
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
@@ -94,7 +99,13 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             try {
                 response = environmentsClient.enviroments(configuration.getProject(), token);
             } catch (InfisicalHttpException | IOException e) {
-                throw new RuntimeException(e);
+                ApplicationManager.getApplication().invokeLater(() ->
+                        NotificationGroupManager.getInstance()
+                                .getNotificationGroup("Infisical Notifications")
+                                .createNotification("Infisical", "Environments konnten nicht geladen werden: " + e.getMessage(), NotificationType.ERROR)
+                                .notify(configuration.getProject()),
+                        ModalityState.any());
+                return;
             }
             String[] fetched = response.workspace().environments().stream()
                     .map(EnvironmentEntry::slug)

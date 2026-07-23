@@ -51,7 +51,6 @@ public class LoginCallBackServer {
             if ("POST".equals(exchange.getRequestMethod())) {
                 byte[] body = exchange.getRequestBody().readAllBytes();
                 String bodyStr = new String(body, StandardCharsets.UTF_8);
-                System.out.println("Body: " + bodyStr);
 
                 JsonObject json = JsonParser.parseString(bodyStr).getAsJsonObject();
                 this.jwtToken = json.get("JTWToken").getAsString();

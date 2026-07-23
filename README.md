@@ -45,11 +45,11 @@ Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen
 
    ![Alt-Text](ExampleScreenshots/pluginAktivieren.png)
 2. Danach erscheinen die Login-Option sowie eine Checkbox, mit der Infisical aktiviert oder pausiert werden kann.
-   ![Alt-Text](ExampleScreenshots/dropdownmenu.png)
+   ![Alt-Text](ExampleScreenshots/loginfeld.png)
 3. Über das Login-Feld wirst du zur Login-Seite weitergeleitet, auf der du dich mit deinen Zugangsdaten anmeldest.
    ![Alt-Text](ExampleScreenshots/login.png)
-
 4. Nach dem Login kannst du über das Dropdown-Menü die gewünschte Umgebung (Environment) auswählen.
+   ![Alt-Text](ExampleScreenshots/dropdownmenu.png)
 
 Sobald das Plugin aktiviert ist, können Gradle-Projekte wie gewohnt über **Run** gestartet werden. Lokale Environment-Dateien können vollständig aus dem Projektordner gelöscht werden, da die Werte jetzt über Infisical bereitgestellt werden.
 

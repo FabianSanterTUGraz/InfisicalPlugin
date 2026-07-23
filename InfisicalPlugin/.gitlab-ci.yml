@@ -110,8 +110,7 @@ pages:
     - apk add --no-cache unzip
     - mkdir -p public
     - cp InfisicalPlugin/build/distributions/*.zip public/
-    - JAR_PATH=$(unzip -l InfisicalPlugin/build/distributions/*.zip | grep -o '[^ ]*/lib/[^ ]*\.jar$' | head -1
-    - unzip -p InfisicalPlugin/build/distributions/*.zip "$JAR_PATH" | unzip -p - META-INF/plugin.xml > /tmp/plugin.xml
+    - ZIP_NAME=$(basename InfisicalPlugin/build/distributions/*.zip)
     - unzip -p InfisicalPlugin/build/distributions/*.zip "*/META-INF/plugin.xml" > /tmp/plugin.xml
     - VERSION=$(grep -o '<version>[^<]*</version>' /tmp/plugin.xml | sed -e 's/<version>//' -e 's/<\/version>//')
     - SINCE_BUILD=$(grep -o 'since-build="[^"]*"' /tmp/plugin.xml | head -1 | cut -d'"' -f2)

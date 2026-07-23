@@ -7,7 +7,7 @@
 2. Über `+` folgende URL eintragen (einmalig):
 
    ```
-   https://<eure-pages-url>/updatePlugins.xml
+    https://<REDACTED-DEPLOY-TOKEN>@gitlab.abuscom.cloud.tld/api/v4/projects/255/packages/generic/infisical-plugin/repository/updatePlugins.xm
    ```
 
 3. Im Reiter **Marketplace** nach `InfisicalPlugin` suchen und **Install** klicken.

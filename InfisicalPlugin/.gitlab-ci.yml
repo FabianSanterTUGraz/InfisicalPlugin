@@ -99,33 +99,40 @@ buildPlugin:
     paths:
       - InfisicalPlugin/build/distributions/*.zip
 
-pages:
+publishPlugin:
   stage: publish
   image: alpine
   needs: ["buildPlugin"]
   rules:
     - if: '$CI_COMMIT_TAG'
   script:
-    - echo "Pages URL wird sein $CI_PAGES_URL"
-    - apk add --no-cache unzip
-    - mkdir -p public
-    - cp InfisicalPlugin/build/distributions/*.zip public/
+    - apk add --no-cache unzip curl
     - ZIP_NAME=$(basename InfisicalPlugin/build/distributions/*.zip)
     - JAR_PATH=$(unzip -l InfisicalPlugin/build/distributions/*.zip | grep -o '[^ ]*/lib/[^ ]*\.jar$' | head -1)
     - unzip -p InfisicalPlugin/build/distributions/*.zip "$JAR_PATH" > /tmp/plugin.jar
     - unzip -p /tmp/plugin.jar META-INF/plugin.xml > /tmp/plugin.xml
     - VERSION=$(grep -o '<version>[^<]*</version>' /tmp/plugin.xml | sed -e 's/<version>//' -e 's/<\/version>//')
     - SINCE_BUILD=$(grep -o 'since-build="[^"]*"' /tmp/plugin.xml | head -1 | cut -d'"' -f2)
+    - PACKAGE_NAME="infisical-plugin"
+    - PACKAGE_API_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}"
+    - ZIP_URL="${PACKAGE_API_URL}/${VERSION}/${ZIP_NAME}"
+    - UPDATE_PLUGINS_URL="${PACKAGE_API_URL}/repository/updatePlugins.xml"
     - |
-      cat > public/updatePlugins.xml <<EOF
+      curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --upload-file "InfisicalPlugin/build/distributions/${ZIP_NAME}" \
+        "${ZIP_URL}"
+    - |
+      cat > /tmp/updatePlugins.xml <<EOF
       <plugins>
         <plugin id="com.abuscom.infisicalplugin.InfisicalPlugin"
-                url="${CI_PAGES_URL}/${ZIP_NAME}"
+                url="${ZIP_URL}"
                 version="${VERSION}">
           <idea-version since-build="${SINCE_BUILD}"/>
         </plugin>
       </plugins>
       EOF
-  artifacts:
-    paths:
-      - public
+    - |
+      curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --upload-file /tmp/updatePlugins.xml \
+        "${UPDATE_PLUGINS_URL}"
+    - echo "Custom Plugin Repository URL (in IntelliJ eintragen) ${UPDATE_PLUGINS_URL}"

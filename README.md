@@ -7,7 +7,7 @@
 2. Über `+` folgende URL eintragen (einmalig):
 
    ```
-    https://<REDACTED-DEPLOY-TOKEN>@gitlab.abuscom.cloud.tld/api/v4/projects/255/packages/generic/infisical-plugin/repository/updatePlugins.xm
+    https://gitlab.abuscom.cloud/api/v4/projects/255/packages/generic/infisical-plugin/repository/updatePlugins.xml
    ```
 
 3. Im Reiter **Marketplace** nach `InfisicalPlugin` suchen und **Install** klicken.
@@ -33,6 +33,7 @@ Diese Datei wird über folgenden Befehl erzeugt:
 ```bash
 infisical init
 ```
+(Wenn man Infisical noch nicht installiert hat hier ist der guide: https://infisical.com/docs/cli/overview#debian%2Fubuntu)
 
 Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen.
 

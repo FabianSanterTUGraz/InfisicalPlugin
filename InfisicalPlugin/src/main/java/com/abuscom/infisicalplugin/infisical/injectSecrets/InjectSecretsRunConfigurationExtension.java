@@ -1,16 +1,29 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.infisical.cache.Cache;
+import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunConfigurationExtension;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunnerSettings;
+import com.intellij.execution.process.ProcessOutputType;
+import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration;
+import com.intellij.openapi.externalSystem.service.internal.ExternalSystemProcessingManager;
+import com.intellij.spring.boot.run.SpringBootApplicationRunConfiguration;
+import com.intellij.openapi.project.Project;
+
 import com.intellij.openapi.options.SettingsEditor;
 
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 
 /**
  * Sorgt nur dafür, dass Checkbox + Dropdown unter "Modify options" der Gradle-Run-Configuration
@@ -23,7 +36,7 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
 
     @Override
     public boolean isApplicableFor(@NotNull RunConfigurationBase<?> configuration) {
-        return configuration instanceof ExternalSystemRunConfiguration;
+        return configuration instanceof ExternalSystemRunConfiguration || configuration instanceof SpringBootApplicationRunConfiguration;
     }
 
     @Override
@@ -64,6 +77,21 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
     public <T extends RunConfigurationBase<?>> void updateJavaParameters(T configuration,
                                                                           JavaParameters javaParameters,
                                                                           RunnerSettings runnerSettings) throws ExecutionException {
-        // empty just to supress error warning
+
+        if (!TokenManager.getInstance().isTokenValid()) {
+            NotificationGroupManager.getInstance()
+                    .getNotificationGroup("Infisical Notifications")   // muss exakt der id aus plugin.xml entsprechen
+                    .createNotification("Infisical", "Kein gültiger Token — bitte einloggen.", NotificationType.ERROR)
+                    .notify(configuration.getProject());
+            return;
+        }
+
+        try {
+            Cache.getInstance().setCache(configuration.getProject());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        javaParameters.getEnv().putAll(Cache.getInstance().getSecrets());
     }
 }

@@ -23,6 +23,7 @@ dependencies {
         bundledPlugin("com.intellij.gradle")
         bundledPlugin("org.jetbrains.plugins.terminal")
         bundledPlugin("JavaScript")
+        bundledPlugin("com.intellij.spring.boot")
     }
 }
 
@@ -41,6 +42,16 @@ intellijPlatformTesting {
         register("runIdeTestJavascript") {
             task {
                 args = listOf("C:/Users/Abuscom/workspace/test-javascript")
+            }
+        }
+    }
+}
+
+intellijPlatformTesting {
+    runIde {
+        register("runIdeTest-Maven-springboot") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/maven-test")
             }
         }
     }

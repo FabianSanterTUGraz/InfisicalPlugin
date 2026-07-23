@@ -52,5 +52,6 @@
     </extensions>
 
     <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
+    <depends>com.intellij.spring.boot</depends>
 
 </idea-plugin>

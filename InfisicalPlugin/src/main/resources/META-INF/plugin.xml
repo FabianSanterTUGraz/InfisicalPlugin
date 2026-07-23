@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
      Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>InfisicalPlugin</name>
+    <name>Infisical for IntelliJ</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor url="https://www.abuscom.com">Abuscom</vendor>
@@ -13,9 +13,8 @@
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
-
+        Integrates Infisical secrets management into IntelliJ IDEA. Browse secrets in a dedicated
+        tool window and inject them automatically into Gradle/Spring Boot run configurations.
         ]]></description>
 
     <!-- Product and plugin compatibility requirements.
@@ -33,10 +32,6 @@
                     icon="/META-INF/pluginIconBlackWhite.svg"/>
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
         <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension"/>
-    </extensions>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="MyPlugin Errors" displayType="BALLOON"/>
     </extensions>
 
     <!-- Bridge: liest Checkbox + Dropdown der RunConfiguration und reicht sie an Cache weiter,

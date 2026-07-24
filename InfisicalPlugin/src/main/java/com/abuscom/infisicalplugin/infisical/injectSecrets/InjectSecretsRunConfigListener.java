@@ -3,6 +3,7 @@ package com.abuscom.infisicalplugin.infisical.injectSecrets;
 import com.intellij.execution.ExecutionListener;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration;
 import com.intellij.spring.boot.run.SpringBootApplicationRunConfiguration;
 
@@ -23,7 +24,9 @@ public class InjectSecretsRunConfigListener implements ExecutionListener {
     @Override
     public void processStartScheduled(@NotNull String executorId, @NotNull ExecutionEnvironment env) {
         if (!(env.getRunProfile() instanceof RunConfigurationBase<?> config)
-                || !(config instanceof ExternalSystemRunConfiguration || config instanceof SpringBootApplicationRunConfiguration)) {
+                || !(config instanceof ExternalSystemRunConfiguration
+                        || config instanceof SpringBootApplicationRunConfiguration
+                        || config instanceof AbstractNodeTargetRunProfile)) {
             return;
         }
 

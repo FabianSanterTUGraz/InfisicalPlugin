@@ -120,6 +120,11 @@ class CacheEnvironmentSwitchTest {
         Field environmentField = Cache.class.getDeclaredField("environment");
         environmentField.setAccessible(true);
         environmentField.set(cache, "");
+
+        Field hasFetchedField = Cache.class.getDeclaredField("hasFetched");
+        hasFetchedField.setAccessible(true);
+        hasFetchedField.set(cache, false);
+
         cache.getSecrets().clear();
     }
 }

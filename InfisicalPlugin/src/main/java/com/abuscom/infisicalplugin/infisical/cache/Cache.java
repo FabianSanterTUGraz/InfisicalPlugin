@@ -25,6 +25,7 @@ public class Cache {
     private Instant timeStamp = Instant.now();
     private Map<String,String> config;
     private String environment = "";
+    private boolean hasFetched = false;
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
 
@@ -68,9 +69,10 @@ public class Cache {
         String previousEnvironment = environment;
         environment = newEnvironment;
 
-        if (previousEnvironment.equals(newEnvironment)) {
+        if (hasFetched && Objects.equals(previousEnvironment, newEnvironment)) {
             return;
         }
+        hasFetched = true;
 
         secrets.clear();
 
@@ -96,6 +98,12 @@ public class Cache {
     public void clearCache()
     {
         environment = "";
+        hasFetched = false;
         Cache.getInstance().getSecrets().clear();
+    }
+
+    public void printCache()
+    {
+        System.out.println(Cache.getInstance().getSecrets());
     }
 }

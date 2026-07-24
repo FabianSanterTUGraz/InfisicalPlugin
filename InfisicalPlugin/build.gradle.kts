@@ -58,3 +58,24 @@ intellijPlatformTesting {
     }
 }
 
+intellijPlatformTesting {
+    runIde {
+        register("runISA") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/isa")
+            }
+        }
+    }
+}
+
+
+intellijPlatformTesting {
+    runIde {
+        register("runIDX") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/hard_test/idashx/backend")
+            }
+        }
+    }
+}
+

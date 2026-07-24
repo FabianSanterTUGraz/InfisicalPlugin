@@ -101,9 +101,4 @@ public class Cache {
         hasFetched = false;
         Cache.getInstance().getSecrets().clear();
     }
-
-    public void printCache()
-    {
-        System.out.println(Cache.getInstance().getSecrets());
-    }
 }

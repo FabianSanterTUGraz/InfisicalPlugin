@@ -1,5 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.cache.CurrentEnviroments;
 import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallResponse;
@@ -10,8 +11,6 @@ import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.icons.AllIcons;
-import com.intellij.notification.NotificationGroupManager;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
@@ -37,7 +36,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private RunConfigurationBase<?> configuration;
 
     public InjectSecretsSettingsEditor() {
-        loginButton.addActionListener(e -> new LoginUser().login());
+        loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
         refreshButton.addActionListener(e -> {
             Cache.getInstance().clearCache();
             loadEnvironments();
@@ -99,11 +98,8 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             try {
                 response = environmentsClient.enviroments(configuration.getProject(), token);
             } catch (InfisicalHttpException | IOException e) {
-                ApplicationManager.getApplication().invokeLater(() ->
-                        NotificationGroupManager.getInstance()
-                                .getNotificationGroup("Infisical Notifications")
-                                .createNotification("Infisical", "Environments konnten nicht geladen werden: " + e.getMessage(), NotificationType.ERROR)
-                                .notify(configuration.getProject()),
+                ApplicationManager.getApplication().invokeLater(
+                        () -> ErrorNotifier.notify(configuration.getProject(), e),
                         ModalityState.any());
                 return;
             }

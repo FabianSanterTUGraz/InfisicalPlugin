@@ -51,6 +51,22 @@ class InfisicalHttpClientTest {
 
         assertEquals(401, exception.getStatusCode());
         assertEquals("{\"error\":\"invalid credentials\"}", exception.getResponseBody());
+        assertEquals("Ungültiger oder abgelaufener Token — bitte erneut einloggen.", exception.getUserMessage());
+    }
+
+    @Test
+    void send_throwsException_onConnectionFailure_withNetworkUserMessage() {
+        int unreachablePort = server.getAddress().getPort();
+        server.stop(0);
+        InfisicalHttpClient offlineClient = new InfisicalHttpClient("http://localhost:" + unreachablePort);
+
+        InfisicalHttpException exception = assertThrows(
+                InfisicalHttpException.class,
+                () -> offlineClient.send("GET", "/ok", Map.of(), null)
+        );
+
+        assertEquals(-1, exception.getStatusCode());
+        assertEquals("Infisical ist nicht erreichbar (Netzwerkfehler).", exception.getUserMessage());
     }
 
     private static void respond(HttpExchange exchange, int statusCode, String body) throws IOException {

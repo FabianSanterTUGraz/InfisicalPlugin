@@ -1,6 +1,7 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
+import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -40,7 +41,7 @@ class CacheEnvironmentSwitchTest {
     }
 
     @Test
-    void switchingEnvironment_dropsPreviousEnvironmentsSecrets() {
+    void switchingEnvironment_dropsPreviousEnvironmentsSecrets() throws InfisicalHttpException {
         stubSecretsEndpoint(Map.of(
                 "dev", Map.of("A", "1", "B", "2", "C", "3"),
                 "staging", Map.of("D", "4", "E", "5", "F", "6")
@@ -57,7 +58,7 @@ class CacheEnvironmentSwitchTest {
     }
 
     @Test
-    void reapplyingSameEnvironment_doesNotRefetch() {
+    void reapplyingSameEnvironment_doesNotRefetch() throws InfisicalHttpException {
         stubSecretsEndpoint(Map.of(
                 "dev", Map.of("A", "1"),
                 // if applyEnvironment refetched on a no-op "switch", the second call below would

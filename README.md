@@ -64,3 +64,8 @@ Nach aktivierung sind die Schritte die selbe wie bei Gradle.
 > Ausführung über das terminal via npm start wird nicht unterstützt! 
 
 ## Für Maven
+
+## Fehlermeldungen
+
+Eine Übersicht aller Fehlermeldungen des Plugins und was sie bedeuten findest du in
+[docs/error-messages.md](docs/error-messages.md).

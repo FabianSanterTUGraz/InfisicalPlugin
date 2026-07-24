@@ -1,6 +1,8 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
+import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunConfigurationExtension;
@@ -9,8 +11,6 @@ import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunnerSettings;
 import com.intellij.execution.process.ProcessOutputType;
-import com.intellij.notification.NotificationGroupManager;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration;
@@ -77,19 +77,20 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
     public <T extends RunConfigurationBase<?>> void updateJavaParameters(T configuration,
                                                                           JavaParameters javaParameters,
                                                                           RunnerSettings runnerSettings) throws ExecutionException {
-
-        if (!TokenManager.getInstance().isTokenValid()) {
-            NotificationGroupManager.getInstance()
-                    .getNotificationGroup("Infisical Notifications")   // muss exakt der id aus plugin.xml entsprechen
-                    .createNotification("Infisical", "Kein gültiger Token — bitte einloggen.", NotificationType.ERROR)
-                    .notify(configuration.getProject());
+        if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
+            ErrorNotifier.notify(configuration.getProject(),"run configgg !");
+            return;
+        }
+        else if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
 
         try {
             Cache.getInstance().setCache(configuration.getProject());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | InfisicalHttpException e) {
+            ErrorNotifier.notify(configuration.getProject(), e);
+            return;
         }
 
         javaParameters.getEnv().putAll(Cache.getInstance().getSecrets());

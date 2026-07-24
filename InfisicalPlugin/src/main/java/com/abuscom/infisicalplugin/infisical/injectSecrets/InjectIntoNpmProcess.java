@@ -1,7 +1,10 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallRequest;
+import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile;
@@ -57,10 +60,20 @@ public class InjectIntoNpmProcess extends AbstractNodeRunConfigurationExtension 
         return new NodeRunConfigurationLaunchSession() {
             @Override
             public void addNodeOptionsTo(@NotNull NodeTargetRun targetRun) throws ExecutionException {
+
+                if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
+                    return;
+                }
+                else if (!TokenManager.getInstance().isTokenValid()) {
+                    ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
+                    return;
+                }
+
                 try {
                     Cache.getInstance().setCache(targetRun.getProject());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                } catch (IOException | InfisicalHttpException e) {
+                    ErrorNotifier.notify(targetRun.getProject(), e);
+                    return;
                 }
                 EnvironmentVariablesData data = EnvironmentVariablesData.create(Cache.getInstance().getSecrets(),true);
                 targetRun.setEnvData(data);

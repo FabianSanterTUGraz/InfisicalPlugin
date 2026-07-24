@@ -47,7 +47,7 @@ public class Cache {
     }
 
     // make the actual secrets api call and copy .env into cache but only of the current enviroment.
-    public void setCache(Project project) throws IOException {
+    public void setCache(Project project) throws IOException, InfisicalHttpException {
         config = readConfig(project);
 
         String projectID = config.get("workspaceId");
@@ -64,7 +64,7 @@ public class Cache {
      * Project/GradleExecutionContext dependency so it's directly testable in plain JUnit (see
      * CacheEnvironmentSwitchTest) without needing a running IntelliJ Platform Application.
      */
-    void applyEnvironment(String projectID, String newEnvironment, String token, SecretClient secretClient) {
+    void applyEnvironment(String projectID, String newEnvironment, String token, SecretClient secretClient) throws InfisicalHttpException {
         String previousEnvironment = environment;
         environment = newEnvironment;
 
@@ -74,15 +74,10 @@ public class Cache {
 
         secrets.clear();
 
-        try {
-            SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
+        SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
 
-            for (SecretEntry entry : response.secrets()) {
-                secrets.put(entry.secretKey(), entry.secretValue());
-            }
-        }
-        catch (InfisicalHttpException e) {
-            System.out.println("Error in fetching the secrets!!");
+        for (SecretEntry entry : response.secrets()) {
+            secrets.put(entry.secretKey(), entry.secretValue());
         }
     }
 
@@ -102,11 +97,5 @@ public class Cache {
     {
         environment = "";
         Cache.getInstance().getSecrets().clear();
-    }
-
-    //security issue nur debug:
-    public void printCache()
-    {
-        //secrets.forEach((key,value) -> System.out.println(key + "==" + value));
     }
 }

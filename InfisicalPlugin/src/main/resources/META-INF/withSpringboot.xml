@@ -1,6 +1,0 @@
-<idea-plugin>
-    <extensions defaultExtensionNs="Springboot">
-        <nodeRunConfigurationExtension
-                implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoSpringBootProcess"/>
-    </extensions>
-</idea-plugin>

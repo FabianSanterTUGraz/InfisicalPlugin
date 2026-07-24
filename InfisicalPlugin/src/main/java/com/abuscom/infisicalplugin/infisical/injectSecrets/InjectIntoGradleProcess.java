@@ -2,7 +2,6 @@ package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.process.ProcessOutputType;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.service.internal.ExternalSystemProcessingManager;
@@ -12,9 +11,10 @@ import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 import org.jetbrains.plugins.gradle.service.project.GradleExecutionHelperExtension;
 import org.jetbrains.plugins.gradle.settings.GradleExecutionSettings;
 
+import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
+import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 
-import javax.management.Notification;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
@@ -34,23 +34,25 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
     public void configureSettings(@NotNull GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
     {
 
-        if (!TokenManager.getInstance().isTokenValid()) {
+        if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
+        return;
+        }
+        else if (!TokenManager.getInstance().isTokenValid()) {
             ExternalSystemTaskId id = context.getTaskId();
             ExternalSystemTask task = ExternalSystemProcessingManager.getInstance().findTask(id);
             if(task != null) {
                 task.cancel();
             }
-            context.getListener().onTaskOutput(context.getTaskId(), "[PLUGIN]: Not able to run(no valid token given)\n", ProcessOutputType.STDOUT);
-            return;
-        }
-        else if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
+            ErrorNotifier.notify(context.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
 
+
         try {
             Cache.getInstance().setCache(context.getProject());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | InfisicalHttpException e) {
+            ErrorNotifier.notify(context.getProject(), e);
+            return;
         }
 
         for(Map.Entry<String,String> environmentVar : Cache.getInstance().getSecrets().entrySet())

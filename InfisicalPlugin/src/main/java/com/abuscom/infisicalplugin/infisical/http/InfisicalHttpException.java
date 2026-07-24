@@ -24,4 +24,15 @@ public class InfisicalHttpException extends Exception {
     public String getResponseBody() {
         return responseBody;
     }
+
+
+    public String getUserMessage() {
+        if (statusCode == 401 || statusCode == 403) {
+            return "Ungültiger oder abgelaufener Token — bitte erneut einloggen.";
+        }
+        if (statusCode == -1) {
+            return "Infisical ist nicht erreichbar (Netzwerkfehler).";
+        }
+        return "Infisical-Anfrage fehlgeschlagen (Status " + statusCode + ").";
+    }
 }

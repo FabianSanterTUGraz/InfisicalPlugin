@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class LoginCallBackServer {
-    public final int PORT = LoginPanel.LOGIN_CALLBACK_PORT;
+    public final int PORT = 8010;
     private static HttpServer server;
     private String jwtToken;
     private String email;

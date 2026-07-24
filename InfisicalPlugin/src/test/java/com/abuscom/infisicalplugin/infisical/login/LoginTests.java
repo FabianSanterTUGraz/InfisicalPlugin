@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class LoginTests {
 
-    private static final String CALLBACK_URL = "http://127.0.0.1:" + LoginPanel.LOGIN_CALLBACK_PORT;
+    private static final String CALLBACK_URL = "http://127.0.0.1:" + 8010;
 
     private final TokenManager tokenManager = TokenManager.getInstance();
     private final HttpClient httpClient = HttpClient.newHttpClient();

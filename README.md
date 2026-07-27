@@ -3,7 +3,6 @@
 ## Installation
 
 1. In der IDE: **File > Settings > Plugins** → Zahnrad-Symbol (⚙) oben rechts → **Manage Plugin Repositories...**
-
 2. Über `+` folgende URL eintragen (einmalig):
 
    ```
@@ -15,6 +14,33 @@
 4. IDE neu starten und prüfen, ob das Plugin unter **Plugins** aufgeführt wird.
 
 Zukünftige Updates werden ab dann automatisch von der IDE erkannt und müssen nicht mehr manuell nachinstalliert werden.
+
+## Infisical CLI installieren
+
+Um Infisical selbst zu installieren (welche man im nächsten Schritt braucht) kann es mit npm folgendermaßen installiert werden:
+
+```
+npm install -g @infisical/cli
+npm update -g @infisical/cli
+```
+
+Alternativ alle Installationsmöglichkeiten: https://infisical.com/docs/cli/overview#debian%2Fubuntu
+
+## Verbindung mit der abuscom instanz
+
+Damit man im nächsten schritt die init funktion aufrufen kann muss sich erstmals über die infisical CLI mit dem abuscom.internal server zu verbinden.
+
+![Alt-Text](ExampleScreenshots/anmeldung_cli.png)
+
+Entweder bereits bestehende internal domain auswäglen oder diese hinzufügen:
+
+```
+   https://infisical.internal.abuscom.cloud
+   ```
+
+![Alt-Text](ExampleScreenshots/select_domain.png)
+
+Dann wird man umgeleitet um sich einmalig anzumelden. 
 
 ## Konfiguration: `.infisical.json`
 
@@ -33,13 +59,12 @@ Diese Datei wird über folgenden Befehl erzeugt:
 ```bash
 infisical init
 ```
-(Wenn man Infisical noch nicht installiert hat hier ist der guide: https://infisical.com/docs/cli/overview#debian%2Fubuntu)
 
 Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen.
 
 > **Hinweis:** Diese Datei enthält keine sensiblen Daten und kann daher problemlos ins Repository eingecheckt werden.
 
-## Für Gradle
+## Für Gradle/SpringBoot
 
 1. Bestehende Gradle-Run-Configuration aktivieren: Drei-Punkte-Menü neben dem Debug-Symbol → **Edit Configurations** → 
 **Modify Options** → Haken bei **Infisical** setzen.
@@ -62,8 +87,6 @@ Steuerung bleibt die gleich jedoch muss Infisical nicht manuell aktiviert werden
 
 Nach aktivierung sind die Schritte die selbe wie bei Gradle.
 > Ausführung über das terminal via npm start wird nicht unterstützt! 
-
-## Für Maven
 
 ## Fehlermeldungen
 

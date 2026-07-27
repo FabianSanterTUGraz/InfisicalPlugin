@@ -30,6 +30,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }
 
 // Deaktiviert, da die Legacy-Ant-Instrumentierung (Javac2) unter Windows-JDKs (z.B. .jdks/ms-25.0.3)

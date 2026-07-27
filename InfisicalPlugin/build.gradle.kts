@@ -79,3 +79,13 @@ intellijPlatformTesting {
     }
 }
 
+intellijPlatformTesting {
+    runIde {
+        register("gradleTEST") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/infisical-test-app")
+            }
+        }
+    }
+}
+

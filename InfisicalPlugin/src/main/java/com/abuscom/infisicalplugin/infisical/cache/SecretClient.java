@@ -30,4 +30,16 @@ public class SecretClient {
         );
         return gson.fromJson(response.body(), SecretsAPICallResponse.class);
     }
+
+    public SecretsAPICallResponse fetchMetadata(String projectID, String enviroment, String token) throws InfisicalHttpException
+    {
+        HttpApiResponse response = httpClient.send(
+                "GET",
+                SECRETS_PATH
+                        + "?projectId=" + projectID + "&environment=" + enviroment +"&viewSecretValue=false&expandSecretReferences=false",
+                Map.of("Content-Type", "application/json","Authorization","Bearer " + token),
+                null
+        );
+        return gson.fromJson(response.body(), SecretsAPICallResponse.class);
+    }
 }

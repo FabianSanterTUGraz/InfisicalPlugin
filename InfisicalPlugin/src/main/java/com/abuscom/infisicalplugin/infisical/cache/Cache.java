@@ -6,7 +6,6 @@ import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.intellij.openapi.project.Project;
-import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 import com.intellij.openapi.project.Project;
 
 import java.io.IOException;
@@ -22,6 +21,7 @@ import java.util.Objects;
 public class Cache {
     private static final Cache INSTANCE = new Cache();
     private final Map<String,String> secrets = new HashMap<>();
+    private final Map<String,Integer> secretVersions = new HashMap<>();
     private Instant timeStamp = Instant.now();
     private Map<String,String> config;
     private String environment = "";
@@ -69,7 +69,11 @@ public class Cache {
         String previousEnvironment = environment;
         environment = newEnvironment;
 
-        if (hasFetched && Objects.equals(previousEnvironment, newEnvironment)) {
+        SecretsAPICallResponse metadata = secretClient.fetchMetadata(projectID, newEnvironment, token);
+        boolean versionChanged = hasVersionChanged(metadata);
+        updateSecretVersions(metadata);
+
+        if (hasFetched && Objects.equals(previousEnvironment, newEnvironment) && !versionChanged) {
             return;
         }
         hasFetched = true;
@@ -95,10 +99,34 @@ public class Cache {
         return secrets;
     }
 
+    boolean hasVersionChanged(SecretsAPICallResponse metadata)
+    {
+        for (SecretEntry entry : metadata.secrets()) {
+            if(entry.version() != getSecretVersion(entry.secretKey()))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int getSecretVersion(String secretKey)
+    {
+        return secretVersions.getOrDefault(secretKey, -1);
+    }
+
+    private void updateSecretVersions(SecretsAPICallResponse metadata)
+    {
+        for (SecretEntry entry : metadata.secrets()) {
+            secretVersions.put(entry.secretKey(), entry.version());
+        }
+    }
+
     public void clearCache()
     {
         environment = "";
         hasFetched = false;
         Cache.getInstance().getSecrets().clear();
+        secretVersions.clear();
     }
 }

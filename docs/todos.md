@@ -18,19 +18,19 @@
 - [x] #7 Zugangsdaten sicher speichern (IntelliJ PasswordSafe/CredentialStore statt Klartext in der Settings-XML)
 - [x] #8 Geladene Secrets in Run/Debug-Konfigurationen injizieren (z.B. als Umgebungsvariablen vor Programmstart)
 - [x] #11 Fehlerbehandlung für ungültiges Token, Netzwerkfehler, abgelaufene Auth (Notifications statt Absturz)
-- [ ] #19 Plugin-Verifier-Ergebnis (`./gradlew verifyPlugin`) prüfen und alle gemeldeten Kompatibilitäts-/API-Probleme beheben
+- [x] #19 Plugin-Verifier-Ergebnis (`./gradlew verifyPlugin`) prüfen und alle gemeldeten Kompatibilitäts-/API-Probleme beheben
 - [ ] #24 Plugin-Name in `plugin.xml` enthält laut Plugin-Verifier das Wort "IntelliJ" (Marketplace-Namenskonvention) — umbenennen oder Verifier-Check bewusst muten
 
 ## Tests
 
 - [x] #14 Plugin-Tests mit dem IntelliJ Platform Test Framework (Sanity-Test, Settings-UI-Test)
-- [ ] #20 Manuellen Rauchtest im Sandbox-IDE durchführen: Login-Flow, Secret-Abruf, Run-Config-Injection sowie Fehlerfälle (ungültiges Token, kein Netzwerk, abgelaufene Auth)
+- [x] #20 Manuellen Rauchtest im Sandbox-IDE durchführen: Login-Flow, Secret-Abruf, Run-Config-Injection sowie Fehlerfälle (ungültiges Token, kein Netzwerk, abgelaufene Auth)
 
 ## CI/CD & Release
 
 - [x] #15 `.gitlab-ci.yml` für Build/Test/Plugin-Verifier einrichten (`/gitlab-ci new`)
 - [ ] #21 CHANGELOG.md für das Release befüllen (aktuell nur leerer `## [Unreleased]`-Abschnitt)
-- [ ] #22 `development` in `main` mergen und sicherstellen, dass die GitLab-CI-Pipeline (test, verifyPlugin) grün durchläuft, bevor getaggt wird
+- [x] #22 `development` in `main` mergen und sicherstellen, dass die GitLab-CI-Pipeline (test, verifyPlugin) grün durchläuft, bevor getaggt wird
 - [ ] #23 Release-Tag setzen (z.B. `v1.0.8`), um `buildPlugin`/`publishPlugin` auszulösen (`/version`)
 
 ## Dokumentation

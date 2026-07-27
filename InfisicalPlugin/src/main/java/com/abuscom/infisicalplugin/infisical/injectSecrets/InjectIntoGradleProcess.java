@@ -21,7 +21,7 @@ import java.util.Objects;
 
 /**
  * Hookt sich über den Erweiterungspunkt {@code org.jetbrains.plugins.gradle.executionHelperExtension}
- * in {@link org.jetbrains.plugins.gradle.service.execution.GradleExecutionHelper} ein.
+ *
  * <p>
  * {@link #configureSettings} wird von dort für jede Gradle-Ausführung aufgerufen, bevor die
  * {@code settings.getEnv()}-Map in die eigentliche Gradle-Tooling-API-Operation übernommen wird

@@ -27,7 +27,7 @@
     <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
     <EXTENSION ID="com.intellij.execution.ExternalSystemRunConfigurationJavaExtension">
       <extension name="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension">
-        <InfisicalSecretsInjection enabled="false" environment="abuscom-demo" />
+        <InfisicalSecretsInjection enabled="false" environment="LOGIN PLEASE.." />
       </extension>
     </EXTENSION>
     <DebugAllEnabled>false</DebugAllEnabled>

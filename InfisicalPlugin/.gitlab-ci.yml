@@ -94,7 +94,8 @@ buildPlugin:
     policy: pull
   script:
     - cd InfisicalPlugin
-    - ./gradlew buildPlugin
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - ./gradlew buildPlugin -Pversion="${VERSION}"
   artifacts:
     paths:
       - InfisicalPlugin/build/distributions/*.zip

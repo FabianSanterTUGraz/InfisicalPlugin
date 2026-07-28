@@ -4,3 +4,4 @@
 build
 .env
 .infisical.json
+.infisical.local.json

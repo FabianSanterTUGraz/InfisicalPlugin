@@ -19,7 +19,7 @@ public class CurrentEnviroments {
     }
 
     public EnviromentsAPICallResponse enviroments(Project project, String token) throws InfisicalHttpException, IOException {
-        Map<String,String> config = Cache.readConfig(project);
+        Map<String,String> config = Cache.readConfig(project, ".infisical.json");
         String projectID = config.get("workspaceId");
 
         HttpApiResponse response = httpClient.send(

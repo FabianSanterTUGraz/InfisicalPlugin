@@ -52,6 +52,11 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
         try {
             Cache.getInstance().setCache(context.getProject());
         } catch (IOException | InfisicalHttpException e) {
+            ExternalSystemTaskId id = context.getTaskId();
+            ExternalSystemTask task = ExternalSystemProcessingManager.getInstance().findTask(id);
+            if(task != null) {
+                task.cancel();
+            }
             ErrorNotifier.notify(context.getProject(), e);
             return;
         }

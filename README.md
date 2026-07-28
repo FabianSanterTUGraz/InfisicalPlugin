@@ -92,3 +92,11 @@ Nach aktivierung sind die Schritte die selbe wie bei Gradle.
 
 Eine Übersicht aller Fehlermeldungen des Plugins und was sie bedeuten findest du in
 [docs/error-messages.md](docs/error-messages.md).
+
+## Secrets-sammeln
+Anbei eine Checkliste von allen Projekten wo die .env files in der infisical Cloud liegen:
+[]
+[]
+[]
+[]
+[]

@@ -20,16 +20,12 @@ import org.jetbrains.annotations.NotNull;
 
 import com.abuscom.infisicalplugin.infisical.login.LoginUser;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.awt.FlowLayout;
 import java.io.IOException;
 
 public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
-    private final JCheckBox enabledCheckBox = new JCheckBox("Infisical Secrets in diese Run Configuration injizieren");
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final JButton loginButton = new JButton("Login");
     private RunConfigurationBase<?> configuration;
@@ -65,7 +61,6 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         this.configuration = configuration;
 
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
-        enabledCheckBox.setSelected(settings.enabled);
         environmentComboBox.setSelectedItem(settings.selectedEnvironment);
 
         loadEnvironments();
@@ -111,14 +106,13 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     @Override
     protected void applyEditorTo(@NotNull RunConfigurationBase<?> configuration) {
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
-        settings.enabled = enabledCheckBox.isSelected();
         settings.selectedEnvironment = (String) environmentComboBox.getSelectedItem();
     }
 
     @Override
     protected @NotNull JComponent createEditor() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.add(enabledCheckBox);
+        panel.add(new JLabel("Environment auswählen........."));
         panel.add(environmentComboBox);
         panel.add(loginButton);
         return panel;

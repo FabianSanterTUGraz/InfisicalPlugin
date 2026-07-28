@@ -54,7 +54,6 @@ public class Cache {
         String projectID = config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
         String newEnvironment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
-
         applyEnvironment(projectID, newEnvironment, token, new SecretClient(new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL)));
     }
 
@@ -128,5 +127,10 @@ public class Cache {
         hasFetched = false;
         Cache.getInstance().getSecrets().clear();
         secretVersions.clear();
+    }
+
+    public boolean infisicalJsonExists(Project project)
+    {
+        return Files.exists(Paths.get(Objects.requireNonNull(project.getBasePath()), ".infisical.json"));
     }
 }

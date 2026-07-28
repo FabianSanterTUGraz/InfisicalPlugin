@@ -17,8 +17,9 @@ public class InjectSecretsSettings {
     private static final String ATTR_ENABLED = "enabled";
     private static final String ATTR_ENVIRONMENT = "environment";
 
-    public boolean enabled = false;
-    public String selectedEnvironment = ENVIRONMENTS[0];
+    //Wenn man debuggen will ohne, dass injected wird einfach auf false setzen.
+    public boolean enabled = true;
+    public String selectedEnvironment = null;
 
     public static InjectSecretsSettings getOrCreate(@NotNull RunConfigurationBase<?> config) {
         InjectSecretsSettings settings = config.getCopyableUserData(KEY);
@@ -37,10 +38,10 @@ public class InjectSecretsSettings {
     public static void readExternal(@NotNull RunConfigurationBase<?> configuration, @NotNull Element element) {
         Element child = element.getChild(ELEMENT_NAME);
         InjectSecretsSettings settings = getOrCreate(configuration);
-        settings.enabled = child != null && Boolean.parseBoolean(child.getAttributeValue(ATTR_ENABLED, "false"));
+        settings.enabled = child != null && Boolean.parseBoolean(child.getAttributeValue(ATTR_ENABLED, "true"));
         settings.selectedEnvironment = child != null
-                ? child.getAttributeValue(ATTR_ENVIRONMENT, ENVIRONMENTS[0])
-                : ENVIRONMENTS[0];
+                ? child.getAttributeValue(ATTR_ENVIRONMENT, (String) null)
+                : null;
     }
 
     public static void writeExternal(@NotNull RunConfigurationBase<?> configuration, @NotNull Element element) {

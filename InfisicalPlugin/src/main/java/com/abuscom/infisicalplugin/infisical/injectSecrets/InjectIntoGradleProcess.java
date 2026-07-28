@@ -34,8 +34,10 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
     public void configureSettings(@NotNull GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
     {
 
-        if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
-        return;
+        if(!Cache.getInstance().infisicalJsonExists(context.getProject()))
+        {
+            ErrorNotifier.notify(context.getProject(),"No json file given in the root!");
+            return;
         }
         else if (!TokenManager.getInstance().isTokenValid()) {
             ExternalSystemTaskId id = context.getTaskId();
@@ -46,7 +48,6 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
             ErrorNotifier.notify(context.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
-
 
         try {
             Cache.getInstance().setCache(context.getProject());

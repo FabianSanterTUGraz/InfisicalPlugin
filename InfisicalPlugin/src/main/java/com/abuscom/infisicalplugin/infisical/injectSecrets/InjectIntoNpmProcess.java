@@ -61,7 +61,9 @@ public class InjectIntoNpmProcess extends AbstractNodeRunConfigurationExtension 
             @Override
             public void addNodeOptionsTo(@NotNull NodeTargetRun targetRun) throws ExecutionException {
 
-                if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
+                if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
+                {
+                    ErrorNotifier.notify(configuration.getProject(),"No json file given in the root!");
                     return;
                 }
                 else if (!TokenManager.getInstance().isTokenValid()) {

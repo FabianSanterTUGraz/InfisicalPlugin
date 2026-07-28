@@ -35,4 +35,11 @@ public class InfisicalHttpException extends Exception {
         }
         return "Infisical-Anfrage fehlgeschlagen (Status " + statusCode + ").";
     }
+
+    public boolean isAuthError() {
+        if (statusCode == 401 || statusCode == 403) {
+            return true;
+        }
+        return statusCode == 404 && responseBody != null && responseBody.contains("Session not found");
+    }
 }

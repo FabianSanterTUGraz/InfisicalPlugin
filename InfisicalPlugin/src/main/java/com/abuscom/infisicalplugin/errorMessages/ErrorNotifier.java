@@ -1,6 +1,7 @@
 package com.abuscom.infisicalplugin.errorMessages;
 
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
@@ -30,6 +31,9 @@ public final class ErrorNotifier {
 
     public static void notify(Project project, Throwable error) {
         LOG.warn("Infisical-Fehler", error);
+        if (error instanceof InfisicalHttpException httpException && httpException.isAuthError()) {
+            TokenManager.getInstance().clearKeypass();
+        }
         notify(project, toUserMessage(error));
     }
 

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InfisicalHttpExceptionTest {
 
@@ -34,5 +36,48 @@ class InfisicalHttpExceptionTest {
         InfisicalHttpException exception = new InfisicalHttpException(500, "{\"error\":\"internal\"}");
 
         assertEquals("Infisical-Anfrage fehlgeschlagen (Status 500).", exception.getUserMessage());
+    }
+
+    @Test
+    void isAuthError_unauthorizedStatus_true() {
+        InfisicalHttpException exception = new InfisicalHttpException(401, "{\"error\":\"invalid credentials\"}");
+
+        assertTrue(exception.isAuthError());
+    }
+
+    @Test
+    void isAuthError_forbiddenStatus_true() {
+        InfisicalHttpException exception = new InfisicalHttpException(403, "{\"error\":\"forbidden\"}");
+
+        assertTrue(exception.isAuthError());
+    }
+
+    @Test
+    void isAuthError_notFoundWithSessionNotFoundBody_true() {
+        InfisicalHttpException exception = new InfisicalHttpException(404,
+                "{\"reqId\":\"req-1\",\"statusCode\":404,\"message\":\"The requested entity is not found\",\"error\":\"Session not found\"}");
+
+        assertTrue(exception.isAuthError());
+    }
+
+    @Test
+    void isAuthError_notFoundWithoutSessionNotFoundBody_false() {
+        InfisicalHttpException exception = new InfisicalHttpException(404, "{\"error\":\"workspace not found\"}");
+
+        assertFalse(exception.isAuthError());
+    }
+
+    @Test
+    void isAuthError_otherStatus_false() {
+        InfisicalHttpException exception = new InfisicalHttpException(500, "{\"error\":\"internal\"}");
+
+        assertFalse(exception.isAuthError());
+    }
+
+    @Test
+    void isAuthError_wrappedIOException_false() {
+        InfisicalHttpException exception = new InfisicalHttpException("Request to /secrets failed", new IOException("Connection refused"));
+
+        assertFalse(exception.isAuthError());
     }
 }

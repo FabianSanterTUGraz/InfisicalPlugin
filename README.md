@@ -64,6 +64,27 @@ Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen
 
 > **Hinweis:** Diese Datei enthält keine sensiblen Daten und kann daher problemlos ins Repository eingecheckt werden.
 
+## Spezieller Fall für hardcoded machine paths
+
+Manche Werte haben die Form eines lokalen, maschinenspezifischen Pfads (z. B. `C:/Users/...`, `/Workspace/abuscom/...`) und müssen daher für den eigenen Rechner individuell gesetzt werden. Das Plugin erkennt solche Fälle automatisch und legt im selben Verzeichnis wie die `.infisical.json`-Datei eine zusätzliche Datei namens `.infisical.local.json` an. Dort werden diese Werte manuell eingetragen.
+
+Die lokalen Werte haben Vorrang vor den Werten aus Infisical — damit lässt sich bei Bedarf auch temporär ein einzelner Wert überschreiben. Beim Wechsel des Environments bleiben die lokalen Werte erhalten und müssen beim Zurückwechseln nicht erneut eingetragen werden.
+
+Die `.infisical.local.json` hat folgende Form:
+
+```json
+{
+  "TEST_CONFIG_REPOSITORY_ROOT_DIRECTORY": "",
+  "TEST_CONFIG_REPOSITORY_OTHER_DIRECTORY": "",
+  "TEST_CONFIG_DIRECTORY": ""
+}
+```
+
+Das ist ein sehr spezieller Anwendungsfall und sollte selten vorkommen.
+
+> **Hinweis:** Diese Datei gehört ins `.gitignore` und darf keinesfalls eingecheckt werden (sie enthält Geheimnisse wie eine `.env`-Datei).
+
+
 ## Für Gradle/SpringBoot
 
 1. Bestehende Gradle-Run-Configuration aktivieren: Drei-Punkte-Menü neben dem Debug-Symbol → **Edit Configurations** → 

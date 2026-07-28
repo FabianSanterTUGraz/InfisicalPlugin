@@ -49,10 +49,12 @@ public class InjectSecretsRunConfigurationExtensionTest extends BasePlatformTest
     public void testIsEnabledFor_reflectsInjectSecretsSettings() {
         RunConfigurationBase<?> config = createSpringBootConfiguration();
 
-        assertFalse(extension.isEnabledFor(config, null));
-
-        InjectSecretsSettings.getOrCreate(config).enabled = true;
+        // enabled now defaults to true (injection is gated on .infisical.json existing instead
+        // of a per-run checkbox) - see InjectSecretsSettings.enabled.
         assertTrue(extension.isEnabledFor(config, null));
+
+        InjectSecretsSettings.getOrCreate(config).enabled = false;
+        assertFalse(extension.isEnabledFor(config, null));
     }
 
     public void testUpdateJavaParameters_invalidToken_doesNotTouchEnv() throws Exception {

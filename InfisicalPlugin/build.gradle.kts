@@ -76,7 +76,7 @@ intellijPlatformTesting {
     runIde {
         register("runIDX") {
             task {
-                args = listOf("C:/Users/Abuscom/workspace/hard_test/idashx/backend")
+                args = listOf("C:/Users/Abuscom/workspace/idashx/backend")
             }
         }
     }
@@ -87,6 +87,16 @@ intellijPlatformTesting {
         register("gradleTEST") {
             task {
                 args = listOf("C:/Users/Abuscom/workspace/infisical-test-app")
+            }
+        }
+    }
+}
+
+intellijPlatformTesting {
+    runIde {
+        register("af-workspace") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/af-workspace")
             }
         }
     }

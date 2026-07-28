@@ -26,6 +26,7 @@
    ```
    https://gitlab.abuscom.cloud/api/v4/projects/255/packages/generic/infisical-plugin/repository/updatePlugins.xml
    ```
+   ![Alt-Text](ExampleScreenshots/custompluginrepositories.png)
 
 3. Im Reiter **Marketplace** nach `InfisicalPlugin` suchen und **Install** klicken.
 

@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -90,17 +89,16 @@ public class Cache {
     public void applyLocalEnvironment(Project project) throws IOException {
         Path localInfisicalJson = Paths.get(Objects.requireNonNull(project.getBasePath()),".infisical.local.json");
         Map<String,String> localOverrides;
-        if (Files.notExists(localInfisicalJson)) {
-            Files.writeString(localInfisicalJson, "", StandardOpenOption.CREATE_NEW);
-            localOverrides = new HashMap<>();
-        }
-        else
-        {
+        if (Files.exists(localInfisicalJson)) {
             localOverrides = readConfig(project,".infisical.local.json");
             if(localOverrides == null)
             {
                 localOverrides = new HashMap<>();
             }
+        }
+        else
+        {
+            localOverrides = new HashMap<>();
         }
 
         Set<String> missingKeys = findMissingUserSpecificKeys(localOverrides);

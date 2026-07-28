@@ -44,12 +44,12 @@ public class CacheLocalOverrideTest extends BasePlatformTestCase {
         }
     }
 
-    public void testApplyLocalEnvironment_noFileNoUserSpecificSecrets_createsFileWithoutThrowing() throws IOException {
+    public void testApplyLocalEnvironment_noUserSpecificSecrets_neverCreatesFile() throws IOException {
         cache.getSecrets().put("PLAIN_KEY", "just-a-value");
 
         cache.applyLocalEnvironment(getProject());
 
-        assertTrue(Files.exists(localOverridePath));
+        assertFalse(Files.exists(localOverridePath));
         assertEquals("just-a-value", cache.getSecrets().get("PLAIN_KEY"));
     }
 

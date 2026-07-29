@@ -3,4 +3,8 @@
         <nodeRunConfigurationExtension
                 implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoNpmProcess"/>
     </extensions>
+
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigListenerNode" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
 </idea-plugin>

@@ -48,7 +48,9 @@ public class InjectSecretsSettings {
         InjectSecretsSettings settings = getOrCreate(configuration);
         Element child = new Element(ELEMENT_NAME);
         child.setAttribute(ATTR_ENABLED, String.valueOf(settings.enabled));
-        child.setAttribute(ATTR_ENVIRONMENT, settings.selectedEnvironment);
+        if (settings.selectedEnvironment != null) {
+            child.setAttribute(ATTR_ENVIRONMENT, settings.selectedEnvironment);
+        }
         element.addContent(child);
     }
 }

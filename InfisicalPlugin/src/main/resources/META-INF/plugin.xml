@@ -19,29 +19,15 @@
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends>com.intellij.modules.json</depends>
-    <depends>com.intellij.modules.java</depends>
-    <depends>com.intellij.gradle</depends>
+    <depends optional="true" config-file="withJavaTooling.xml">com.intellij.modules.java</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
-        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension"/>
     </extensions>
 
-    <!-- Bridge: liest Checkbox + Dropdown der RunConfiguration und reicht sie an Cache weiter,
-         bevor der Gradle-Prozess startet. -->
-    <applicationListeners>
-        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigListener" topic="com.intellij.execution.ExecutionListener"/>
-    </applicationListeners>
-
-    <!-- Der extension point der direkt in den Gradle process sich dazwischenhaengt und die env setten kann. -->
-    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
-        <executionHelperExtension
-                implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoGradleProcess"/>
-    </extensions>
 
     <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
-    <depends>com.intellij.spring.boot</depends>
+
 
 </idea-plugin>

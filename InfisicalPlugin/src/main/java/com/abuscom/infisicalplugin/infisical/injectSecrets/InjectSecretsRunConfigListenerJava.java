@@ -20,13 +20,12 @@ import com.abuscom.infisicalplugin.infisical.cache.Cache;
  * {@link Cache#isRunConfigInjectionEnabled()} für den nicht abgedeckten Typ auf dem alten Wert
  * stehen, obwohl die Checkbox in dessen RunConfiguration angehakt ist.
  */
-public class InjectSecretsRunConfigListener implements ExecutionListener {
+public class InjectSecretsRunConfigListenerJava implements ExecutionListener {
     @Override
     public void processStartScheduled(@NotNull String executorId, @NotNull ExecutionEnvironment env) {
         if (!(env.getRunProfile() instanceof RunConfigurationBase<?> config)
                 || !(config instanceof ExternalSystemRunConfiguration
-                        || config instanceof SpringBootApplicationRunConfiguration
-                        || config instanceof AbstractNodeTargetRunProfile)) {
+                        || config instanceof SpringBootApplicationRunConfiguration)) {
             return;
         }
 

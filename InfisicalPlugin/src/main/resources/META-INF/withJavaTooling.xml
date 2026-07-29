@@ -1,0 +1,18 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigListenerJava" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
+
+
+    <!-- Der extension point der direkt in den Gradle process sich dazwischenhaengt und die env setten kann. -->
+    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+    <executionHelperExtension
+            implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoGradleProcess"/>
+    </extensions>
+    <depends>com.intellij.gradle</depends>
+    <depends>com.intellij.spring.boot</depends>
+</idea-plugin>

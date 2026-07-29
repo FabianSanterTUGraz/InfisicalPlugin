@@ -1,9 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets.gradle;
 
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
-import com.intellij.openapi.externalSystem.service.internal.ExternalSystemProcessingManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 import org.jetbrains.plugins.gradle.service.project.GradleExecutionHelperExtension;
@@ -37,11 +34,6 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
             return;
         }
         else if (!TokenManager.getInstance().isTokenValid()) {
-            ExternalSystemTaskId id = context.getTaskId();
-            ExternalSystemTask task = ExternalSystemProcessingManager.getInstance().findTask(id);
-            if(task != null) {
-                task.cancel();
-            }
             ErrorNotifier.notify(context.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
@@ -49,11 +41,6 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
         try {
             Cache.getInstance().setCache(context.getProject());
         } catch (IOException | InfisicalHttpException e) {
-            ExternalSystemTaskId id = context.getTaskId();
-            ExternalSystemTask task = ExternalSystemProcessingManager.getInstance().findTask(id);
-            if(task != null) {
-                task.cancel();
-            }
             ErrorNotifier.notify(context.getProject(), e);
             return;
         }

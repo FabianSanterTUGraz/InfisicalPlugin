@@ -1,0 +1,323 @@
+# Projektkontext: InfisicalPlugin
+
+**Zielgruppe dieses Dokuments:** Ein Kollege (oder ein KI-Agent von Claude), der zum ersten Mal
+an diesem Plugin weiterarbeitet und schnell produktiv werden soll. Dieses Dokument ersetzt keine
+Erkenntnisse (`erkenntnisse/*.md`) oder Specs (`docs/specs/*.md`) — es ist die Landkarte, die
+darauf verweist.
+
+## TL;DR
+
+IntelliJ-Platform-Plugin (Java/Gradle), das Infisical-Secrets in die IDE holt und automatisch als
+Umgebungsvariablen in Run-Configurations injiziert (aktuell: Gradle-, Spring-Boot- und npm/Node-Runs).
+Login läuft über einen Browser-Flow gegen eine selbstgehostete Infisical-Instanz, das JWT liegt im
+IntelliJ PasswordSafe. Secrets werden pro Environment gecacht und nur bei Environment- oder
+Versionswechsel neu abgerufen. Die eigentliche Schwierigkeit im Projekt: IntelliJ hat **pro
+Sprache/Run-Runner unterschiedliche, undokumentierte Mechanismen**, um Env-Variablen tatsächlich
+in den gestarteten Prozess zu bekommen — siehe Abschnitt "Neue Sprache hinzufügen".
+
+## Repo-Struktur
+
+```
+infisicalplugin/                        ← Repo-Root
+├── CLAUDE.md                           ← Projektinstruktionen für Claude Code
+├── docs/todos.md                       ← TODO-Liste (siehe /todo-Skill)
+├── docs/specs/                         ← Implementierungs-Specs zu TODOs
+├── erkenntnisse/                       ← Projektweite Erkenntnisse (Root-Ebene)
+└── InfisicalPlugin/                    ← Das eigentliche Gradle-Projekt (IntelliJ-Plugin)
+    ├── build.gradle.kts                ← Plugin-Dependencies, Test-RunIde-Configs
+    ├── src/main/java/.../infisicalplugin/
+    │   ├── errorMessages/ErrorNotifier.java        ← einziger Ort für User-Notifications
+    │   └── infisical/
+    │       ├── auth/        ← Universal-Auth-Login (Machine Identity, wird aktuell NICHT genutzt)
+    │       ├── login/       ← Browser-Login-Flow, Token-Storage (DER echte Auth-Weg)
+    │       ├── http/        ← generischer HTTP-Client für die Infisical-REST-API
+    │       ├── cache/       ← Secret-Cache pro Environment, lokale Overrides
+    │       └── injectSecrets/ ← pro Run-Config-Typ ein Injection-Mechanismus
+    ├── src/main/resources/META-INF/
+    │   ├── plugin.xml           ← Haupt-Manifest, optionale <depends>
+    │   ├── withJavaTooling.xml  ← nur geladen wenn com.intellij.modules.java vorhanden
+    │   └── withJavascript.xml   ← nur geladen wenn NodeJS-Plugin vorhanden
+    └── src/test/java/...        ← JUnit5-Tests, siehe Abschnitt "Tests"
+```
+
+## Systemarchitektur
+
+### 1. Authentifizierung — zwei parallele Konzepte, nur eines aktiv genutzt
+
+Es gibt **zwei** Auth-Bausteine im Code, das ist auf den ersten Blick verwirrend:
+
+- **`infisical/auth/UniversalAuthClient`** — Machine-Identity-Login (`clientId`/`clientSecret`
+  gegen `/api/v1/auth/universal-auth/login`). Existiert im Code, wird aber **nirgendwo aufgerufen**
+  (kein UI, kein Caller). Historisch aus einer frühen Spec (`docs/specs/4-...`), inzwischen durch
+  den Browser-Flow abgelöst. Falls hier weitergearbeitet wird: erst prüfen, ob das noch gebraucht
+  wird, bevor Zeit investiert wird.
+- **`infisical/login/*`** — der tatsächlich genutzte Login-Weg:
+
+  1. `LoginUser.login(project)` öffnet den System-Browser auf
+     `https://infisical.internal.abuscom.cloud/login?callback_port=8010` (`BrowserUtil.browse`).
+  2. Gleichzeitig startet `LoginCallBackServer` einen simplen `com.sun.net.httpserver.HttpServer`
+     auf `127.0.0.1:8010`. Das ist ein **lokaler, temporärer Server**, kein produktiver Endpoint.
+  3. Der Nutzer loggt sich im Browser bei Infisical ein. Die Infisical-Weboberfläche selbst
+     schickt danach einen `POST /` mit JSON-Body `{"JTWToken": "...", "email": "..."}`
+     (Tippfehler `JTWToken` ist absichtlich beibehalten — muss exakt so vom Infisical-Frontend
+     erwartet werden, nicht "korrigieren" ohne das Gegenstück zu prüfen!).
+  4. `LoginCallBackServer.handle(...)` liest das JWT aus, ruft
+     `TokenManager.setTokenInKeypass(jwt)` auf und stoppt sich selbst (`server.stop(0)`).
+  5. `TokenManager` (Singleton) speichert das JWT über
+     `com.intellij.ide.passwordSafe.PasswordSafe` (IntelliJ Credential Store, OS-Keychain-backed)
+     unter dem Service-Namen `InfisicalPlugin/jwtToken`. **Kein Klartext auf der Platte.**
+  6. `TokenManager.isTokenValid()` dekodiert das JWT client-seitig (Base64 des Payload-Teils,
+     kein Signatur-Check!) und vergleicht `exp` gegen `Instant.now()`. Bei Ablauf wird der Token
+     automatisch aus dem Keystore gelöscht.
+  7. Andere Komponenten (UI, Run-Config-Editor) abonnieren Änderungen über
+     `TokenManager.addTokenChangeListener(TokenChangeListener)` — z.B. um den "Login"-Button
+     ein-/auszublenden (`InjectSecretsSettingsEditor`).
+
+  **Es gibt keinen Refresh-Token-Mechanismus.** Läuft das JWT ab, muss der Nutzer den
+  Browser-Login erneut durchlaufen (kein automatisches Refresh).
+
+### 2. HTTP-Client & API-Calls
+
+- **`InfisicalHttpClient`** (`infisical/http/`) ist der einzige generische HTTP-Layer — dünner
+  Wrapper um Javas eingebautes `java.net.http.HttpClient`. Base-URL ist hart codiert:
+  `DEFAULT_BASE_URL = "https://infisical.internal.abuscom.cloud"` (interne, selbstgehostete
+  Infisical-Instanz, **keine Multi-Instance-Unterstützung**, kein Settings-Feld dafür).
+- Timeouts: Connect 10s, Request 30s. Wirft bei HTTP-Status ≥ 300 eine `InfisicalHttpException`
+  (unterscheidet Auth-Fehler via `isAuthError()` — löst dann automatisch `TokenManager.clearKeypass()`
+  aus, siehe `ErrorNotifier.notify(project, Throwable)`).
+- **Genutzte Endpunkte** (alle mit `Authorization: Bearer <jwt>`):
+  - `GET /api/v4/secrets?projectId=...&environment=...` — vollständige Secrets
+    (`SecretClient.secrets`, aufgerufen aus `Cache.applyEnvironment`).
+  - `GET /api/v4/secrets?projectId=...&environment=...&viewSecretValue=false&expandSecretReferences=false`
+    — nur Metadaten (Key + Version, **ohne** Secret-Werte) für den Versions-Check
+    (`SecretClient.fetchMetadata`).
+  - `GET /api/v1/workspace/{projectID}` — Liste der Environments eines Workspace
+    (`CurrentEnviroments.enviroments`, für das Environment-Dropdown im Run-Config-Editor).
+  - `POST /api/v1/auth/universal-auth/login` — s.o., aktuell toter Code-Pfad.
+- JSON-(De-)Serialisierung überall mit **Gson**, DTOs als Java `record`s in `infisical/cache/*`.
+  Achtung: Typos wie `EnviromentsAPICallRequest`/`SecretsAPICallRequest` (fehlendes "n") sind
+  konsistent so durchgezogen — beim Umbenennen aufpassen, dass nicht nur ein Teil erwischt wird.
+  `SecretsAPICallRequest` und `EnviromentsAPICallRequest` werden aktuell nirgendwo instanziiert
+  (Query-Parameter werden direkt als String gebaut) — nur die Response-DTOs sind in Benutzung.
+
+### 3. Cache-Mechanismus
+
+`Cache` (`infisical/cache/Cache.java`) ist ein **Singleton** (analog zu `TokenManager`) und hält:
+
+- `secrets: Map<String,String>` — aktuell aktive Secrets (Key → Value), das was tatsächlich in
+  Run-Configs injiziert wird.
+- `secretVersions: Map<String,Integer>` — letzte bekannte Version pro Secret-Key, für Change-Detection.
+- `environment: String` — aktuell gecachtes Environment.
+- `hasFetched: boolean` — ob überhaupt schon einmal geladen wurde.
+
+**Ablauf bei jedem Run-Start** (`Cache.setCache(project)`, aufgerufen aus allen drei
+Injection-Mechanismen):
+
+1. `.infisical.json` aus dem Projekt-Root lesen (`workspaceId`, `defaultEnvironment`).
+2. Ziel-Environment bestimmen: `runConfigSelectedEnvironment` (falls über die Checkbox/Dropdown
+   in der Run-Config gewählt) **überschreibt** `defaultEnvironment` aus der JSON.
+3. `applyEnvironment(...)`: Erst **Metadaten** abrufen (`fetchMetadata`, ohne Secret-Werte —
+   spart Traffic/Exposure), Versionsvergleich gegen `secretVersions`. Nur wenn sich Environment
+   ODER mindestens eine Secret-Version geändert hat (oder noch nie gefetcht wurde), werden die
+   **echten Werte** nachgeladen (`secrets(...)`) und der komplette `secrets`-Cache geleert und
+   neu befüllt. **Kein TTL, kein Zeit-basiertes Invalidieren** — Invalidierung ist rein
+   versions-/environment-getrieben.
+4. `applyLocalEnvironment(project)`: Liest zusätzlich `.infisical.local.json` (pro Entwickler,
+   **nicht** eingecheckt — s. `.gitignore`). Zweck: Secrets, deren Wert user-/maschinenspezifisch
+   ist (z.B. ein lokaler Dateipfad wie `C:\Users\<name>\...`). Erkennung über die Regex
+   `USER_SPECIFIC_PATH` in `Cache.looksLikeUserSpecificPath(...)`. Fehlt für so einen Key noch ein
+   lokaler Override, wird die `.infisical.local.json` automatisch um den leeren Key ergänzt
+   (`appendMissingKeys`) und **eine IOException geworfen**, die den Run-Start abbricht — der
+   Nutzer muss den Wert erst manuell eintragen, bevor der Run erneut gestartet wird.
+5. Danach steht `Cache.getInstance().getSecrets()` bereit und wird von der jeweiligen
+   Injection-Klasse in die Env-Variablen des Zielprozesses kopiert.
+
+Konfigurationsdateien im Projekt-Root:
+
+- **`.infisical.json`** — eingecheckt, enthält `workspaceId` (Infisical-Projekt-ID) und
+  `defaultEnvironment`. `gitBranchToEnvironmentMapping` existiert als Feld, wird aber **im Code
+  nirgendwo gelesen** (kein Branch→Environment-Auto-Mapping implementiert, trotz Feld im JSON).
+- **`.infisical.local.json`** — NICHT eingecheckt, pro Entwickler, Overrides für user-spezifische
+  Secret-Werte.
+
+### 4. Secret-Injection — pro Run-Config-Typ ein eigener Mechanismus
+
+Das ist der komplizierteste und am wenigsten offensichtliche Teil des Plugins. IntelliJ hat
+**keinen einheitlichen Weg**, Env-Variablen in einen gestarteten Prozess zu bekommen — das hängt
+davon ab, *wie* der jeweilige Run-Config-Typ seinen Prozess überhaupt startet:
+
+| Run-Config-Typ | Extension Point | Mechanismus | Datei |
+|---|---|---|---|
+| Java / Spring Boot | `com.intellij.runConfigurationExtension` (generisch, SDK) | `updateJavaParameters(...)` → `javaParameters.getEnv().putAll(...)` | `InjectSecretsRunConfigurationExtension` |
+| Gradle | `org.jetbrains.plugins.gradle.executionHelperExtension` | `configureSettings(GradleExecutionSettings, GradleExecutionContext)` → `settings.addEnvironmentVariable(...)` | `InjectIntoGradleProcess` |
+| npm / Node.js | `JavaScript.nodeRunConfigurationExtension` | `createLaunchSession(...)` → `NodeTargetRun.setEnvData(EnvironmentVariablesData...)` (Targets API) | `InjectIntoNpmProcess` |
+
+**Warum drei verschiedene Mechanismen?** Siehe die ausführliche Erkenntnis
+`InfisicalPlugin/erkenntnisse/2026-07-17-secrets-in-echten-gradle-prozess-injizieren.md` — Kurzfassung:
+
+- `RunConfigurationExtension.patchCommandLine(...)` (der naheliegende generische SDK-Hook) patcht
+  eine `GeneralCommandLine` — funktioniert nur, wenn der Run-Config-Typ seinen Prozess wirklich
+  über `GeneralCommandLine`/`ProcessBuilder` startet (z.B. reine Java-Prozesse). **Gradle tut das
+  nicht** — Gradle-Runs laufen über die Gradle Tooling API (`LongRunningOperation`/
+  `ProjectConnection`), da existiert nie ein `GeneralCommandLine`-Objekt. Deshalb der Umweg über
+  `GradleExecutionHelperExtension`.
+- Ein zweiter, verworfener Ansatz für Gradle (`ExternalSystemTaskExecutionSettings.setEnv()`)
+  hätte funktioniert, hätte aber die **persistierte** Run-Config mutiert — die Secrets wären im
+  "Environment Variables"-Textfeld sichtbar und beim Speichern im Klartext in
+  `.idea/workspace.xml`/`.run/*.xml` gelandet. Explizit unerwünscht (Ziel: unsichtbar wie ein
+  vorher im Terminal exportierter Wert).
+- Node/npm-Configs erben nicht von den generischen SDK-Run-Config-Basisklassen, auf die
+  `patchCommandLine` zielt — die JavaScript-Plugin-Extension nutzt die neuere "Targets API"
+  (`NodeTargetRun`), daher der eigene Extension Point.
+
+**Checkbox + Environment-Dropdown** ("Modify options" in der Run-Config) sind **UI-technisch**
+generisch (`InjectSecretsSettingsEditor`, `InjectSecretsSettings`) und werden von allen drei
+`createEditor()`-Implementierungen wiederverwendet — aber die eigentliche Werte-Weitergabe an
+`Cache` läuft über zusätzliche `ExecutionListener` (`InjectSecretsRunConfigListenerJava`/`...Node`),
+weil `GradleExecutionContext`/`configureSettings` selbst **keinen Bezug zur konkreten
+RunConfiguration** haben — der Listener muss die Checkbox-Auswahl vorab in den `Cache`
+"zwischenparken" (`Cache.setRunConfigSelection(enabled, environment)`), bevor der eigentliche
+Gradle-Start passiert.
+
+### 5. Plugin-Manifest-Struktur (optionale Dependencies)
+
+`plugin.xml` deklariert die Sprach-/Framework-Integrationen als **optionale** Dependencies mit
+eigener Config-Datei, damit das Plugin auch in IDEs ohne die jeweilige Sprachunterstützung läuft:
+
+```xml
+<depends optional="true" config-file="withJavaTooling.xml">com.intellij.modules.java</depends>
+<depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
+```
+
+`withJavaTooling.xml` bündelt Java/Gradle/Spring-Boot-Extensions (inkl. eigener
+`<depends>com.intellij.gradle</depends>`/`<depends>com.intellij.spring.boot</depends>` — diese
+inneren `<depends>` sind **nicht** optional, d.h. `withJavaTooling.xml` wird nur wirksam geladen,
+wenn Gradle- und Spring-Boot-Plugin ebenfalls vorhanden sind). `withJavascript.xml` bündelt die
+Node-Extension. Für Compile-Zeit-Zugriff auf die jeweiligen Plugin-APIs müssen zusätzlich in
+`build.gradle.kts` im `intellijPlatform { }`-Block die passenden `bundledPlugin(...)`-Einträge
+stehen (aktuell: `com.intellij.modules.json`, `com.intellij.java`, `com.intellij.gradle`,
+`org.jetbrains.plugins.terminal`, `JavaScript`, `com.intellij.spring.boot`).
+
+## Neue Sprache hinzufügen (z.B. PHP, Python, Go, Ruby, .NET)
+
+Das ist die häufigste Erweiterungsanfrage an dieses Plugin. Vorgehen in dieser Reihenfolge:
+
+**1. Herausfinden, wie die Ziel-IDE/das Ziel-Plugin ihre Run-Configs tatsächlich startet.**
+Das ist der Schritt, der am meisten Zeit kostet — siehe die Erkenntnis-Datei aus Abschnitt 4 als
+Vorlage für die Recherche-Methode (Decompilieren der relevanten Plugin-JARs mit `javap`/IDE
+"Decompile"-Funktion, wenn keine öffentliche API-Doku existiert). Drei mögliche Fälle:
+
+- **Fall A — echter OS-Prozess über `GeneralCommandLine`** (typisch für PhpStorm/PyCharm-CLI-Runs,
+  reine Skript-Interpreter, viele einfache Run-Config-Typen): Dann reicht der generische,
+  bereits vorhandene Extension Point `com.intellij.runConfigurationExtension`
+  (`RunConfigurationExtension.patchCommandLine(...)`). **Keine neue Infrastruktur nötig** — nur:
+  - `InjectSecretsRunConfigurationExtension.isApplicableFor(...)` um die neue Config-Klasse
+    erweitern (z.B. `configuration instanceof PhpRunConfiguration` — Klassennamen vorher per
+    Doku/Decompile verifizieren, nicht raten).
+  - `patchCommandLine(...)` implementieren analog zu `updateJavaParameters(...)`:
+    `cmdLine.getEnvironment().putAll(Cache.getInstance().getSecrets())` (statt
+    `javaParameters.getEnv()`, weil hier kein `JavaParameters`-Objekt existiert).
+  - Neuen `ExecutionListener` nach Vorbild `InjectSecretsRunConfigListenerJava` registrieren, damit
+    `Cache.setRunConfigSelection(...)` auch für den neuen Typ gefüttert wird (oder den
+    bestehenden Java-Listener um die neue Typprüfung erweitern, falls das UI-Verhalten identisch
+    sein soll).
+
+- **Fall B — läuft über eine Tooling-API/externes Build-System** (analog zu Gradle: Maven mit
+  eigener Tooling-Anbindung, andere Build-System-Plugins): `patchCommandLine` greift **nicht**.
+  Es braucht einen eigenen, build-system-spezifischen Extension Point analog
+  `GradleExecutionHelperExtension`/`InjectIntoGradleProcess` — muss erst im jeweiligen Plugin-JAR
+  gesucht/decompiliert werden (Suche nach `ExecutionHelperExtension`, `LongRunningOperation`,
+  `setEnvironmentVariables` als Einstiegspunkte).
+
+- **Fall C — nutzt die neuere "Targets API"** (analog zu Node.js/`NodeTargetRun`, manche neueren
+  Remote-/Container-Run-Configs): Eigene, framework-spezifische Extension analog
+  `InjectIntoNpmProcess`/`AbstractNodeRunConfigurationExtension` nötig — Suche nach
+  `TargetEnvironment`, `TargetedCommandLineBuilder` oder `*TargetRunProfile`-Klassen im
+  jeweiligen Plugin.
+
+**2. Optionale Dependency + Config-Datei anlegen**, exakt nach dem Muster von
+`withJavaTooling.xml`/`withJavascript.xml`:
+
+```xml
+<!-- z.B. withPhp.xml -->
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoPhpProcess"/>
+    </extensions>
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigListenerPhp" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
+</idea-plugin>
+```
+
+In `plugin.xml` ergänzen:
+
+```xml
+<depends optional="true" config-file="withPhp.xml">com.jetbrains.php</depends>
+```
+
+(Plugin-ID vorher verifizieren — z.B. über die JetBrains-Plugin-Marketplace-Seite oder
+`plugins/<name>/lib/*.jar!/META-INF/plugin.xml` einer installierten IDE.)
+
+**3. `build.gradle.kts`**: passende `bundledPlugin("...")`- oder Marketplace-Plugin-Zeile im
+`intellijPlatform { }`-Block ergänzen, damit die neuen API-Klassen zur Compile-Zeit auflösbar
+sind. PHP/Python-Support ist in der IntelliJ-Community-Edition ggf. nicht bundled (kommerzielle
+Plugins) — das beeinflusst, gegen welche Test-Sandbox (`runIde`) entwickelt/getestet werden kann.
+
+**4. UI wiederverwenden, nicht duplizieren**: `InjectSecretsSettingsEditor` und
+`InjectSecretsSettings` sind bereits generisch über `RunConfigurationBase<?>` — für einen neuen
+Run-Config-Typ i.d.R. **keine neue Editor-Klasse** nötig, nur `createEditor()` in der neuen
+Extension-Klasse `return new InjectSecretsSettingsEditor()` liefern lassen (wie in allen drei
+bestehenden Extensions).
+
+**5. Tests ergänzen** nach Vorbild `InjectIntoGradleProcessTest.java`/`InjectIntoNpmProcessTest.java`.
+
+**6. Nicht vergessen:** `.gitignore` der IntelliJ-Plugin-Konventionen prüfen, `CHANGELOG.md`
+ergänzen, `docs/todos.md` pflegen (`/todo`-Skill).
+
+## Tests
+
+JUnit 5 (`org.junit.jupiter`) + etwas JUnit 4 Vintage (`libs.junit4`, `junit-vintage-engine`) für
+IntelliJ-Platform-Test-Framework-Kompatibilität. `TestFrameworkType.Platform` in
+`build.gradle.kts`. Ausführung: `./gradlew test` (aus `InfisicalPlugin/`). Wichtig:
+`Cache.applyEnvironment(...)` ist bewusst **paketprivat statt privat** und frei von
+Project/GradleExecutionContext-Abhängigkeiten gehalten, damit es in Plain-JUnit ohne laufende
+IntelliJ-Platform-Application getestet werden kann (siehe Kommentar in `Cache.java`,
+`CacheEnvironmentSwitchTest`).
+
+Manuelle Test-Sandboxes in `build.gradle.kts` (`intellijPlatformTesting.runIde { register(...) }`)
+zeigen auf lokale Test-Workspaces auf der Maschine des Autors (`C:/Users/Abuscom/workspace/...`)
+— diese Pfade existieren nur lokal, für einen neuen Kollegen müssen eigene Test-Projekte an
+diesen Stellen angelegt oder die Pfade angepasst werden.
+
+## Bekannte offene Punkte (siehe `docs/todos.md` für Details/Aktualität)
+
+- `.gitBranchToEnvironmentMapping` ist im `.infisical.json`-Schema vorgesehen, aber **nicht
+  implementiert** — falls das mal gebraucht wird, ist das der Ansatzpunkt (`Cache.readConfig`).
+- Kein automatisches Token-Refresh — bei Ablauf ist erneuter Browser-Login nötig.
+- Plugin-Name in `plugin.xml` enthält laut Plugin-Verifier das Wort "IntelliJ"
+  (Marketplace-Namenskonvention verletzt) — noch offen (`docs/todos.md` #24).
+- `CHANGELOG.md` für das erste Release noch nicht befüllt (#21), Release-Tag noch nicht gesetzt (#23).
+- `UniversalAuthClient`/Machine-Identity-Auth ist totes Code (nicht verdrahtet) — vor Ausbau
+  klären, ob das noch gebraucht wird oder entfernt werden kann.
+
+## Wo finde ich was — Schnellreferenz
+
+| Frage | Datei |
+|---|---|
+| Wie läuft der Login ab? | `infisical/login/LoginUser.java`, `LoginCallBackServer.java`, `TokenManager.java` |
+| Welche API-Endpunkte werden genutzt? | `infisical/cache/SecretClient.java`, `CurrentEnviroments.java` |
+| Wie wird der HTTP-Request gebaut? | `infisical/http/InfisicalHttpClient.java` |
+| Wann werden Secrets neu geladen? | `infisical/cache/Cache.java` (`applyEnvironment`) |
+| Wie kommen Secrets in einen Gradle-Run? | `infisical/injectSecrets/InjectIntoGradleProcess.java` + Erkenntnis `2026-07-17-...` |
+| Wie kommen Secrets in einen npm-Run? | `infisical/injectSecrets/InjectIntoNpmProcess.java` |
+| Wie kommen Secrets in einen Java/SpringBoot-Run? | `infisical/injectSecrets/InjectSecretsRunConfigurationExtension.java` |
+| Wo werden Fehler angezeigt? | `errorMessages/ErrorNotifier.java` |
+| Welche optionalen Plugin-Dependencies gibt es? | `plugin.xml`, `withJavaTooling.xml`, `withJavascript.xml` |
+| Was ist offen? | `docs/todos.md` |
+
+## Verwandte Erkenntnisse
+
+- `InfisicalPlugin/erkenntnisse/2026-07-17-secrets-in-echten-gradle-prozess-injizieren.md` —
+  Pflichtlektüre vor jeder Änderung an der Gradle-Injection, sonst wird ein bereits verworfener
+  Ansatz (`patchCommandLine`, `settings.setEnv()`) wiederentdeckt.

@@ -144,6 +144,13 @@ Für Beiträge am Plugin selbst (nicht nur die Nutzung):
 
 Details zu CI/CD und Release-Ablauf siehe `.gitlab-ci.yml` sowie den `/version`-Skill.
 
+## Weiterentwickeln am Plugin
+
+Für einen tieferen Einstieg vor größeren Änderungen (z. B. Unterstützung einer weiteren Sprache):
+
+- [SYSTEM_ARCHITEKTUR.md](SYSTEM_ARCHITEKTUR.md) — kompakter, für Menschen geschriebener Überblick über Login-Flow, Cache-Mechanismus, API-Endpunkte und die Injection-Mechanismen, inklusive Schritt-für-Schritt-Anleitung zum Anbinden einer weiteren Sprache.
+- [erkenntnisse/CLAUDE_KONTEXT.md.txt](erkenntnisse/CLAUDE_KONTEXT.md.txt) — ausführlicher Projektkontext, gedacht als Einstiegspunkt für einen KI-Agenten (z. B. Claude), der beim Weiterarbeiten am Plugin schnell den vollen Überblick braucht.
+
 ## Technischer Hintergrund: Wie sich das Plugin in die Run-Prozesse einhakt
 
 Die drei unterstützten Run-Config-Typen (Gradle, native Spring-Boot-Configs, npm/Node) starten ihre Prozesse intern auf drei völlig unterschiedliche Arten. Deshalb nutzt das Plugin für jeden Typ einen eigenen, dafür passenden Extension-Point statt eines einzigen generischen Hooks.

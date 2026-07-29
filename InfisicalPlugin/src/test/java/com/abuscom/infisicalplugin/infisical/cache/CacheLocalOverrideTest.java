@@ -112,6 +112,14 @@ public class CacheLocalOverrideTest extends BasePlatformTestCase {
         assertTrue(Cache.looksLikeUserSpecificPath("/home/abuscom/workspace/idashx-config"));
     }
 
+    public void testLooksLikeUserSpecificPath_recognizesFileUriPrefixedPaths() {
+        assertTrue(Cache.looksLikeUserSpecificPath("file:C:\\Users\\Abuscom\\workspace\\wobi-controlroom\\dev"));
+        assertTrue(Cache.looksLikeUserSpecificPath("file:C:/Users/Abuscom/workspace/wobi-controlroom/dev"));
+        assertTrue(Cache.looksLikeUserSpecificPath("file:/C:/Users/Abuscom/workspace/wobi-controlroom/dev"));
+        assertTrue(Cache.looksLikeUserSpecificPath("file:///C:/Users/Abuscom/workspace/wobi-controlroom/dev"));
+        assertTrue(Cache.looksLikeUserSpecificPath("file:/home/abuscom/workspace/idashx-config"));
+    }
+
     public void testLooksLikeUserSpecificPath_ignoresPlainValuesAndNull() {
         assertFalse(Cache.looksLikeUserSpecificPath("sk-not-a-path-1234"));
         assertFalse(Cache.looksLikeUserSpecificPath("https://infisical.internal.abuscom.cloud"));

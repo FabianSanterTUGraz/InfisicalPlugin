@@ -189,7 +189,7 @@ public class Cache {
     }
 
     private static final Pattern USER_SPECIFIC_PATH = Pattern.compile(
-            "(?i)^[a-z]:[\\\\/]users[\\\\/][^\\\\/]+|^/users/[^/]+|^/home/[^/]+"
+            "(?i)^(?:file:/{0,3})?[a-z]:[\\\\/]users[\\\\/][^\\\\/]+|^(?:file:/{0,3})?/users/[^/]+|^(?:file:/{0,3})?/home/[^/]+"
     );
 
     public static boolean looksLikeUserSpecificPath(String value) {

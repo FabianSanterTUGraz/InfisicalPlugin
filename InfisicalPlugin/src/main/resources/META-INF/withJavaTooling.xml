@@ -14,5 +14,5 @@
             implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectIntoGradleProcess"/>
     </extensions>
     <depends>com.intellij.gradle</depends>
-    <depends>com.intellij.spring.boot</depends>
+    <depends optional="true" config-file="withSpringBoot.xml">com.intellij.spring.boot</depends>
 </idea-plugin>

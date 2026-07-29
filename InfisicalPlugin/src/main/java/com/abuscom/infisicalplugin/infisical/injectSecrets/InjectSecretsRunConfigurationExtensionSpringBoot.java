@@ -10,7 +10,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunnerSettings;
-import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration;
+import com.intellij.spring.boot.run.SpringBootApplicationRunConfiguration;
 
 import com.intellij.openapi.options.SettingsEditor;
 
@@ -20,17 +20,15 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 /**
- * Sorgt nur dafür, dass Checkbox + Dropdown unter "Modify options" der Gradle-Run-Configuration
- * auftauchen und in {@link InjectSecretsSettings} persistiert werden. Die eigentliche
- * Secret-Injektion passiert NICHT hier (siehe patchCommandLine unten), sondern in
- * {@link InjectIntoGradleProcess}, das über {@link InjectSecretsRunConfigListener} erfährt, ob und
- * mit welcher Umgebung injiziert werden soll.
+ * Pendant zu {@link InjectSecretsRunConfigurationExtension}, nur für Spring-Boot-Run-Configs -
+ * getrennt, weil com.intellij.spring.boot ein eigenes optionales Plugin ist und nicht in jeder
+ * Java-faehigen IDE vorhanden ist (siehe withSpringBoot.xml).
  */
-public class InjectSecretsRunConfigurationExtension extends RunConfigurationExtension {
+public class InjectSecretsRunConfigurationExtensionSpringBoot extends RunConfigurationExtension {
 
     @Override
     public boolean isApplicableFor(@NotNull RunConfigurationBase<?> configuration) {
-        return configuration instanceof ExternalSystemRunConfiguration;
+        return configuration instanceof SpringBootApplicationRunConfiguration;
     }
 
     @Override

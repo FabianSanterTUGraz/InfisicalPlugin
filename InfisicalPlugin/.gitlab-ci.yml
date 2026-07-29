@@ -36,6 +36,11 @@ test:
   image: eclipse-temurin:21-jdk-jammy
   stage: validate
   needs: [prepare]
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends git xvfb libxtst6 libxi6 libxrender1
   cache:

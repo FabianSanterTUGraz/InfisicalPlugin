@@ -2,7 +2,6 @@ package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
-import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallRequest;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.ExecutionException;

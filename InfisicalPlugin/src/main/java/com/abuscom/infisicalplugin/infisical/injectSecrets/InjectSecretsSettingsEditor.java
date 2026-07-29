@@ -1,7 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
-import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.cache.CurrentEnviroments;
 import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallResponse;
 import com.abuscom.infisicalplugin.infisical.cache.EnvironmentEntry;
@@ -10,7 +9,6 @@ import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;

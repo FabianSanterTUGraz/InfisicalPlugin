@@ -10,13 +10,8 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunnerSettings;
-import com.intellij.execution.process.ProcessOutputType;
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration;
-import com.intellij.openapi.externalSystem.service.internal.ExternalSystemProcessingManager;
 import com.intellij.spring.boot.run.SpringBootApplicationRunConfiguration;
-import com.intellij.openapi.project.Project;
 
 import com.intellij.openapi.options.SettingsEditor;
 

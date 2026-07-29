@@ -1,11 +1,9 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
-import com.intellij.execution.process.ProcessOutputType;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTask;
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId;
 import com.intellij.openapi.externalSystem.service.internal.ExternalSystemProcessingManager;
-import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionContext;
 import org.jetbrains.plugins.gradle.service.project.GradleExecutionHelperExtension;
@@ -17,7 +15,6 @@ import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Hookt sich über den Erweiterungspunkt {@code org.jetbrains.plugins.gradle.executionHelperExtension}

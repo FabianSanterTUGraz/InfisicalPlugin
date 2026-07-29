@@ -39,6 +39,24 @@ tasks.test {
 // einen nicht existierenden "Packages"-Unterordner erwartet und mit einem Build-Fehler abbricht.
 intellijPlatform {
     instrumentCode = false
+
+    // Ohne untilBuild testet verifyPlugin per Default auch gegen offene EAP-Builds (z.B. 261/262),
+    // deren Plugin-Layout (u.a. Spring-Boot-Bündelung) sich noch ändert und falsch-positive
+    // "package not found"-Fehler erzeugt. Bindung an die getestete 253.x-Branch (2025.3.x).
+    pluginConfiguration {
+        ideaVersion {
+            untilBuild = "253.*"
+        }
+    }
+
+    // com.intellij.spring.boot ist im vom Verifier bezogenen IU-Testimage nicht gebündelt
+    // (bestätigt: com.intellij.spring taucht im aufgelösten Dependency-Baum nirgends auf), obwohl
+    // es in einer echten IntelliJ-Ultimate-Installation vorhanden ist. Der Zugriff darauf ist
+    // ueber withSpringBoot.xml bereits korrekt optional gated - ohne diesen Hinweis meldet der
+    // Verifier trotzdem "No such class" fuer SpringBootApplicationRunConfiguration.
+    pluginVerification {
+        externalPrefixes = listOf("com.intellij.spring")
+    }
 }
 
 intellijPlatformTesting {

@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.infisical.injectSecrets;
+package com.abuscom.infisicalplugin.infisical.injectSecrets.gradle;
 
 import com.intellij.execution.ExecutionListener;
 import com.intellij.execution.configurations.RunConfigurationBase;
@@ -8,6 +8,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunCo
 import org.jetbrains.annotations.NotNull;
 
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings;
 
 /**
  * Läuft, bevor der Prozess startet - das ist der früheste Punkt an dem wir Zugriff auf die

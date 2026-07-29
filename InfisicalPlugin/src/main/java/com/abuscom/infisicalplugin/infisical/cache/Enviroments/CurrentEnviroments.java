@@ -1,5 +1,6 @@
-package com.abuscom.infisicalplugin.infisical.cache;
+package com.abuscom.infisicalplugin.infisical.cache.Enviroments;
 
+import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.http.HttpApiResponse;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;

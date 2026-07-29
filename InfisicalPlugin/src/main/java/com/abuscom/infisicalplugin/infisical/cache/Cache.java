@@ -1,5 +1,8 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretsAPICallResponse;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;

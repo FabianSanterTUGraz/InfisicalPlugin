@@ -1,8 +1,10 @@
-package com.abuscom.infisicalplugin.infisical.injectSecrets;
+package com.abuscom.infisicalplugin.infisical.injectSecrets.node;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettingsEditor;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.runners.ExecutionEnvironment;

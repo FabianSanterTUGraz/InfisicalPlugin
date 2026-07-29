@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.infisical.cache;
+package com.abuscom.infisicalplugin.infisical.cache.Secrets;
 
 import java.util.List;
 

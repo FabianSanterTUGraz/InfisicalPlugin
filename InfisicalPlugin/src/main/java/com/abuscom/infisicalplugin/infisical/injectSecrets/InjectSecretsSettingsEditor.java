@@ -1,9 +1,9 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
-import com.abuscom.infisicalplugin.infisical.cache.CurrentEnviroments;
-import com.abuscom.infisicalplugin.infisical.cache.EnviromentsAPICallResponse;
-import com.abuscom.infisicalplugin.infisical.cache.EnvironmentEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Enviroments.CurrentEnviroments;
+import com.abuscom.infisicalplugin.infisical.cache.Enviroments.EnviromentsAPICallResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Enviroments.EnvironmentEntry;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;

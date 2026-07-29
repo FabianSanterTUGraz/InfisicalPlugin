@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.infisical.cache;
+package com.abuscom.infisicalplugin.infisical.cache.Enviroments;
 
 import java.util.List;
 

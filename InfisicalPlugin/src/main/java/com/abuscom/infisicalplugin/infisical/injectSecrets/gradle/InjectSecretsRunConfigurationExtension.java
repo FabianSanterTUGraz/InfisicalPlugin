@@ -1,8 +1,10 @@
-package com.abuscom.infisicalplugin.infisical.injectSecrets;
+package com.abuscom.infisicalplugin.infisical.injectSecrets.gradle;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettingsEditor;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunConfigurationExtension;
@@ -23,8 +25,8 @@ import java.io.IOException;
  * Sorgt nur dafür, dass Checkbox + Dropdown unter "Modify options" der Gradle-Run-Configuration
  * auftauchen und in {@link InjectSecretsSettings} persistiert werden. Die eigentliche
  * Secret-Injektion passiert NICHT hier (siehe patchCommandLine unten), sondern in
- * {@link InjectIntoGradleProcess}, das über {@link InjectSecretsRunConfigListener} erfährt, ob und
- * mit welcher Umgebung injiziert werden soll.
+ * {@link InjectIntoGradleProcess}, das über {@link InjectSecretsRunConfigListenerJava} erfährt, ob
+ * und mit welcher Umgebung injiziert werden soll.
  */
 public class InjectSecretsRunConfigurationExtension extends RunConfigurationExtension {
 

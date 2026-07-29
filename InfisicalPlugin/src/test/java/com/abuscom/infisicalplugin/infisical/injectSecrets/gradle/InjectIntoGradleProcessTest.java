@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.infisical.injectSecrets;
+package com.abuscom.infisicalplugin.infisical.injectSecrets.gradle;
 
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;

@@ -1,5 +1,6 @@
-package com.abuscom.infisicalplugin.infisical.injectSecrets;
+package com.abuscom.infisicalplugin.infisical.injectSecrets.springboot;
 
+import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.execution.configurations.ConfigurationFactory;
@@ -9,18 +10,13 @@ import com.intellij.spring.boot.run.SpringBootApplicationConfigurationTypeBase;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.jetbrains.plugins.gradle.service.execution.GradleExternalTaskConfigurationType;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
-
 /**
- * isApplicableFor/isEnabledFor need a real RunConfigurationBase instance (Project-backed), so
- * these run as BasePlatformTestCase (real lightweight Project + Application) rather than plain
- * JUnit 5 - see LoginTests.java for why PasswordSafe-touching code is blocked without one.
+ * Pendant zu InjectSecretsRunConfigurationExtensionTest (Gradle) - deckt den seit dem
+ * Spring-Boot-Split ausgelagerten Teil von isApplicableFor ab.
  */
-public class InjectSecretsRunConfigurationExtensionTest extends BasePlatformTestCase {
+public class InjectSecretsRunConfigurationExtensionSpringBootTest extends BasePlatformTestCase {
 
-    private final InjectSecretsRunConfigurationExtension extension = new InjectSecretsRunConfigurationExtension();
+    private final InjectSecretsRunConfigurationExtensionSpringBoot extension = new InjectSecretsRunConfigurationExtensionSpringBoot();
 
     @Override
     protected void tearDown() throws Exception {
@@ -31,12 +27,12 @@ public class InjectSecretsRunConfigurationExtensionTest extends BasePlatformTest
         }
     }
 
-    public void testIsApplicableFor_gradleConfiguration_isTrue() {
-        assertTrue(extension.isApplicableFor(createGradleConfiguration()));
-    }
-
     public void testIsApplicableFor_springBootConfiguration_isTrue() {
         assertTrue(extension.isApplicableFor(createSpringBootConfiguration()));
+    }
+
+    public void testIsApplicableFor_gradleConfiguration_isFalse() {
+        assertFalse(extension.isApplicableFor(createGradleConfiguration()));
     }
 
     public void testIsApplicableFor_unrelatedConfiguration_isFalse() {
@@ -49,8 +45,6 @@ public class InjectSecretsRunConfigurationExtensionTest extends BasePlatformTest
     public void testIsEnabledFor_reflectsInjectSecretsSettings() {
         RunConfigurationBase<?> config = createSpringBootConfiguration();
 
-        // enabled now defaults to true (injection is gated on .infisical.json existing instead
-        // of a per-run checkbox) - see InjectSecretsSettings.enabled.
         assertTrue(extension.isEnabledFor(config, null));
 
         InjectSecretsSettings.getOrCreate(config).enabled = false;
@@ -75,18 +69,5 @@ public class InjectSecretsRunConfigurationExtensionTest extends BasePlatformTest
     private RunConfigurationBase<?> createSpringBootConfiguration() {
         ConfigurationFactory factory = SpringBootApplicationConfigurationTypeBase.getInstance().getDefaultConfigurationFactory();
         return (RunConfigurationBase<?>) factory.createTemplateConfiguration(getProject());
-    }
-
-    // TokenManager.isTokenValid() only inspects the unsigned "exp" claim, so a structurally
-    // valid but unsigned JWT is enough to exercise the "token present and not expired" path
-    // without a real Infisical login.
-    static String fakeJwt(long expiresInSeconds) {
-        String header = base64Url("{\"alg\":\"none\"}");
-        String payload = base64Url("{\"exp\":" + (Instant.now().getEpochSecond() + expiresInSeconds) + "}");
-        return header + "." + payload + ".sig";
-    }
-
-    private static String base64Url(String json) {
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(json.getBytes(StandardCharsets.UTF_8));
     }
 }

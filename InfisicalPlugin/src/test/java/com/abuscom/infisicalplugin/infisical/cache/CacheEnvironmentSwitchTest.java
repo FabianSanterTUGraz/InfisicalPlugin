@@ -1,5 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.sun.net.httpserver.HttpExchange;

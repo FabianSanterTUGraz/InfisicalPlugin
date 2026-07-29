@@ -1,4 +1,4 @@
-package com.abuscom.infisicalplugin.infisical.injectSecrets;
+package com.abuscom.infisicalplugin.infisical.injectSecrets.node;
 
 import com.intellij.execution.Executor;
 import com.intellij.execution.application.ApplicationConfigurationType;

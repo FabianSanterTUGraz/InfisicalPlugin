@@ -1,5 +1,6 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
+import com.abuscom.infisicalplugin.infisical.injectSecrets.gradle.InjectSecretsRunConfigurationExtensionTest;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 

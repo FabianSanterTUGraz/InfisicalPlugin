@@ -1,6 +1,8 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
-plugins {
+
+        plugins {
     id("java")
     id("org.jetbrains.changelog")
     id("org.jetbrains.intellij.platform")
@@ -45,7 +47,6 @@ intellijPlatform {
     // "package not found"-Fehler erzeugt. Bindung an die getestete 253.x-Branch (2025.3.x).
     pluginConfiguration {
         ideaVersion {
-            untilBuild = "253.*"
         }
     }
 
@@ -55,8 +56,13 @@ intellijPlatform {
     // ueber withSpringBoot.xml bereits korrekt optional gated - ohne diesen Hinweis meldet der
     // Verifier trotzdem "No such class" fuer SpringBootApplicationRunConfiguration.
     pluginVerification {
-        externalPrefixes = listOf("com.intellij.spring")
-    }
+        ides {
+                // Verifier testet gezielt nur gegen diese eine Version, statt gegen den offenen
+                // (evtl. EAP-)Bereich, der aus since-build/until-build abgeleitet würde
+                create(IntelliJPlatformType.IntellijIdeaUltimate, "2025.3.5")
+            }
+            externalPrefixes = listOf("com.intellij.spring")
+        }
 }
 
 intellijPlatformTesting {

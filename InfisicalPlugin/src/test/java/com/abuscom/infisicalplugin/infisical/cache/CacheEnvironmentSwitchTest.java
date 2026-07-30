@@ -16,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -59,19 +60,23 @@ class CacheEnvironmentSwitchTest {
     }
 
     @Test
-    void reapplyingSameEnvironment_doesNotRefetch() throws InfisicalHttpException {
-        stubSecretsEndpoint(Map.of(
-                "dev", Map.of("A", "1"),
-                // if applyEnvironment refetched on a no-op "switch", the second call below would
-                // silently pick these up instead of keeping the secrets from the first call
-                "dev-if-refetched" , Map.of("A", "999")
-        ));
+    void reapplyingSameEnvironment_alwaysRefetchesFreshSecrets() throws InfisicalHttpException {
+        AtomicReference<Map<String, String>> devSecrets = new AtomicReference<>(Map.of("A", "1"));
+        server.createContext("/api/v4/secrets", exchange -> {
+            Map<String, String> params = parseQuery(exchange.getRequestURI().getQuery());
+            Map<String, String> secrets = "dev".equals(params.get("environment")) ? devSecrets.get() : Map.of();
+            respond(exchange, 200, toSecretsJson(secrets));
+        });
 
         cache.applyEnvironment("proj-1", "dev", "token", secretClient);
         assertEquals(Map.of("A", "1"), cache.getSecrets());
 
+        // server-side value changes without any environment switch - there's no caching anymore,
+        // so a plain reapply of the same environment must still pick this up
+        devSecrets.set(Map.of("A", "999"));
         cache.applyEnvironment("proj-1", "dev", "token", secretClient);
-        assertEquals(Map.of("A", "1"), cache.getSecrets());
+
+        assertEquals(Map.of("A", "999"), cache.getSecrets());
     }
 
     private void stubSecretsEndpoint(Map<String, Map<String, String>> secretsByEnvironment) {
@@ -121,10 +126,6 @@ class CacheEnvironmentSwitchTest {
         Field environmentField = Cache.class.getDeclaredField("environment");
         environmentField.setAccessible(true);
         environmentField.set(cache, "");
-
-        Field hasFetchedField = Cache.class.getDeclaredField("hasFetched");
-        hasFetchedField.setAccessible(true);
-        hasFetchedField.set(cache, false);
 
         cache.getSecrets().clear();
     }

@@ -17,12 +17,12 @@ public class SecretClient {
         this.httpClient = httpClient;
     }
 
-    public SecretsAPICallResponse secrets(String projectID, String enviroment, String token) throws InfisicalHttpException
+    public SecretsAPICallResponse secrets(String projectID, String environment, String token) throws InfisicalHttpException
     {
         HttpApiResponse response = httpClient.send(
                 "GET",
                 SECRETS_PATH
-                + "?projectId=" + projectID + "&environment=" + enviroment,
+                + "?projectId=" + projectID + "&environment=" + environment,
                 Map.of("Content-Type", "application/json","Authorization","Bearer " + token),
                 null
         );

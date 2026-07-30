@@ -28,7 +28,11 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
     public void configureSettings(@NotNull GradleExecutionSettings settings, @NotNull GradleExecutionContext context)
     {
 
-        if(!Cache.getInstance().infisicalJsonExists(context.getProject()))
+        if(!Cache.getInstance().isRunConfigInjectionEnabled())
+        {
+            return; //silent return (wahrscheinlich keine gewünschte run config für infisical)
+        }
+        else if(!Cache.getInstance().infisicalJsonExists(context.getProject()))
         {
             ErrorNotifier.notify(context.getProject(),"No json file given in the root!");
             return;

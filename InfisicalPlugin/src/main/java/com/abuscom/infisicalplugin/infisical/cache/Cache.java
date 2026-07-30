@@ -22,10 +22,8 @@ import java.util.regex.Pattern;
 public class Cache {
     private static final Cache INSTANCE = new Cache();
     private final Map<String,String> secrets = new HashMap<>();
-    private final Map<String,Integer> secretVersions = new HashMap<>();
     private Map<String,String> config;
     private String environment = "";
-    private boolean hasFetched = false;
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
 
@@ -47,6 +45,11 @@ public class Cache {
         return runConfigInjectionEnabled;
     }
 
+    public String getCurrentEnviroment()
+    {
+        return environment;
+    }
+
     // make the actual secrets api call and copy .env into cache but only of the current enviroment.
     public void setCache(Project project) throws IOException, InfisicalHttpException {
         config = readConfig(project,".infisical.json");
@@ -60,25 +63,13 @@ public class Cache {
     }
 
     /**
-     * Switches the cached environment and, if it actually changed, drops the previous
-     * environment's secrets before fetching the new one's - so a run against environment B never
-     * still sees leftover keys from an earlier run against environment A. Deliberately free of any
-     * Project/GradleExecutionContext dependency so it's directly testable in plain JUnit (see
-     * CacheEnvironmentSwitchTest) without needing a running IntelliJ Platform Application.
+     * Always fetches fresh secrets for the given environment from Infisical - no caching, every
+     * call is a real API call. Deliberately free of any Project/GradleExecutionContext dependency
+     * so it's directly testable in plain JUnit (see CacheEnvironmentSwitchTest) without needing a
+     * running IntelliJ Platform Application.
      */
     void applyEnvironment(String projectID, String newEnvironment, String token, SecretClient secretClient) throws InfisicalHttpException {
-        String previousEnvironment = environment;
         environment = newEnvironment;
-
-        SecretsAPICallResponse metadata = secretClient.fetchMetadata(projectID, newEnvironment, token);
-        boolean versionChanged = hasVersionChanged(metadata);
-        updateSecretVersions(metadata);
-
-        if (hasFetched && Objects.equals(previousEnvironment, newEnvironment) && !versionChanged) {
-            return;
-        }
-        hasFetched = true;
-
         secrets.clear();
 
         SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
@@ -152,35 +143,10 @@ public class Cache {
         return secrets;
     }
 
-    boolean hasVersionChanged(SecretsAPICallResponse metadata)
-    {
-        for (SecretEntry entry : metadata.secrets()) {
-            if(entry.version() != getSecretVersion(entry.secretKey()))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public int getSecretVersion(String secretKey)
-    {
-        return secretVersions.getOrDefault(secretKey, -1);
-    }
-
-    private void updateSecretVersions(SecretsAPICallResponse metadata)
-    {
-        for (SecretEntry entry : metadata.secrets()) {
-            secretVersions.put(entry.secretKey(), entry.version());
-        }
-    }
-
     public void clearCache()
     {
         environment = "";
-        hasFetched = false;
         Cache.getInstance().getSecrets().clear();
-        secretVersions.clear();
     }
 
     public boolean infisicalJsonExists(Project project)
@@ -189,7 +155,7 @@ public class Cache {
     }
 
     private static final Pattern USER_SPECIFIC_PATH = Pattern.compile(
-            "(?i)^(?:file:/{0,3})?[a-z]:[\\\\/]users[\\\\/][^\\\\/]+|^(?:file:/{0,3})?/users/[^/]+|^(?:file:/{0,3})?/home/[^/]+"
+            "(?i)^(?:file:/{0,3})?(?:[a-z]:[\\\\/]|/).+"
     );
 
     public static boolean looksLikeUserSpecificPath(String value) {

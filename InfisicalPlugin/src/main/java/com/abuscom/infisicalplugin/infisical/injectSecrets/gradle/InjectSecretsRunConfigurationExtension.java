@@ -73,7 +73,11 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
     public <T extends RunConfigurationBase<?>> void updateJavaParameters(T configuration,
                                                                           JavaParameters javaParameters,
                                                                           RunnerSettings runnerSettings) throws ExecutionException {
-        if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
+        if(!Cache.getInstance().isRunConfigInjectionEnabled())
+        {
+            return; //silent return (wahrscheinlich keine gewünschte run config für infisical)
+        }
+        else if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
         {
             ErrorNotifier.notify(configuration.getProject(),"No json file given in the root!");
             return;

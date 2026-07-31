@@ -18,6 +18,8 @@ import com.intellij.execution.configuration.EnvironmentVariablesData;
 import org.jdom.Element;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -82,8 +84,17 @@ public class InjectIntoNpmProcess extends AbstractNodeRunConfigurationExtension 
                     ErrorNotifier.notify(targetRun.getProject(), e);
                     return;
                 }
-                EnvironmentVariablesData data = EnvironmentVariablesData.create(Cache.getInstance().getSecrets(),true);
-                targetRun.setEnvData(data);
+
+                EnvironmentVariablesData data = configuration.getEnvData();
+                Map<String,String> mutableMap = new HashMap<>(data.getEnvs());
+
+                for(Map.Entry<String,String> environmentVar : Cache.getInstance().getSecrets().entrySet())
+                {
+                    mutableMap.putIfAbsent(environmentVar.getKey(), environmentVar.getValue());
+                }
+
+                EnvironmentVariablesData merged = EnvironmentVariablesData.create(mutableMap,data.isPassParentEnvs());
+                targetRun.setEnvData(merged);
             }
         };
     }

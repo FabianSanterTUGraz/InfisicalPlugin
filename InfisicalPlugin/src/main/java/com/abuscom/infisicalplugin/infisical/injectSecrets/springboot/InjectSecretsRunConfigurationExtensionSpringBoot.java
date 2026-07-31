@@ -21,6 +21,7 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Pendant zu {@link InjectSecretsRunConfigurationExtension}, nur für Spring-Boot-Run-Configs -
@@ -89,6 +90,9 @@ public class InjectSecretsRunConfigurationExtensionSpringBoot extends RunConfigu
             return;
         }
 
-        javaParameters.getEnv().putAll(Cache.getInstance().getSecrets());
+        for(Map.Entry<String,String> environmentVar : Cache.getInstance().getSecrets().entrySet())
+        {
+            javaParameters.getEnv().putIfAbsent(environmentVar.getKey(), environmentVar.getValue());
+        }
     }
 }

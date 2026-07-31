@@ -51,7 +51,9 @@ public class InjectIntoGradleProcess implements GradleExecutionHelperExtension{
 
         for(Map.Entry<String,String> environmentVar : Cache.getInstance().getSecrets().entrySet())
         {
-            settings.addEnvironmentVariable(environmentVar.getKey(), environmentVar.getValue());
+            if(!settings.getEnv().containsKey(environmentVar.getKey())) {
+                settings.addEnvironmentVariable(environmentVar.getKey(), environmentVar.getValue());
+            }
         }
     }
 }

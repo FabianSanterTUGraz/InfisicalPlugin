@@ -20,6 +20,7 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Sorgt nur dafür, dass Checkbox + Dropdown unter "Modify options" der Gradle-Run-Configuration
@@ -73,27 +74,5 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
     public <T extends RunConfigurationBase<?>> void updateJavaParameters(T configuration,
                                                                           JavaParameters javaParameters,
                                                                           RunnerSettings runnerSettings) throws ExecutionException {
-        if(!Cache.getInstance().isRunConfigInjectionEnabled())
-        {
-            return; //silent return (wahrscheinlich keine gewünschte run config für infisical)
-        }
-        else if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
-        {
-            ErrorNotifier.notify(configuration.getProject(),"No json file given in the root!");
-            return;
-        }
-        else if (!TokenManager.getInstance().isTokenValid()) {
-            ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
-            return;
-        }
-
-        try {
-            Cache.getInstance().setCache(configuration.getProject());
-        } catch (IOException | InfisicalHttpException e) {
-            ErrorNotifier.notify(configuration.getProject(), e);
-            return;
-        }
-
-        javaParameters.getEnv().putAll(Cache.getInstance().getSecrets());
     }
 }

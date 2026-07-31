@@ -88,17 +88,11 @@ public class Cache {
                     LOG.warn("Konnte Secret '" + entry.secretKey() + "' nicht mit '" + SLUG_NAME + "' taggen", e);
                 }
             }
+
             secrets.put(entry.secretKey(), entry.secretValue());
         }
     }
 
-    /**
-     * Tagging ist ein Nice-to-have (bessere Auffindbarkeit in der Web-App), keine
-     * Voraussetzung fuers Laden der Secrets - ein Fehler hier (fehlende Rechte, Netzwerk,
-     * API-Aenderung) darf applyEnvironment() deshalb nicht scheitern lassen. Liefert null,
-     * wenn der Tag weder gefunden noch angelegt werden konnte; alle Tag-Aufrufe weiter unten
-     * werden dann uebersprungen.
-     */
     private TagResponse resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
         try {
             Optional<TagResponse> existingTag = secretClient.findTagBySlug(projectID, SLUG_NAME, token);

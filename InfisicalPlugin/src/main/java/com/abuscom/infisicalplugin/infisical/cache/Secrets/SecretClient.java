@@ -26,7 +26,7 @@ public class SecretClient {
         HttpApiResponse response = httpClient.send(
                 "GET",
                 SECRETS_PATH
-                + "?projectId=" + projectID + "&environment=" + environment,
+                + "?projectId=" + projectID + "&environment=" + environment + "&includePersonalOverrides=true",
                 Map.of("Content-Type", "application/json","Authorization","Bearer " + token),
                 null
         );

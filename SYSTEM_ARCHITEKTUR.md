@@ -38,7 +38,7 @@ flowchart LR
 |---|---|---|
 | **Login** | Browser-basierter Login, JWT entgegennehmen, sicher speichern | `LoginUser`, `LoginCallBackServer`, `TokenManager` |
 | **HTTP-Client** | Generischer REST-Client gegen die Infisical-API | `InfisicalHttpClient` |
-| **Secrets-Zugriff** | Secrets/Environments von Infisical abrufen | `SecretClient`, `CurrentEnviroments` |
+| **Secrets-Zugriff** | Secrets/Environments von Infisical abrufen, machine-spezifische Secrets automatisch taggen | `SecretClient`, `CurrentEnviroments` |
 | **Cache** | Secrets pro Environment zwischenspeichern, Invalidierung, lokale Overrides | `Cache` |
 | **Injection** | Secrets als Env-Variablen in den jeweiligen Run-Prozess einschleusen | `InjectIntoGradleProcess`, `InjectIntoNpmProcess`, `InjectSecretsRunConfigurationExtension` |
 | **UI** | Checkbox + Environment-Auswahl in der Run-Config, Login-Button | `InjectSecretsSettingsEditor`, `InjectSecretsSettings` |
@@ -80,20 +80,64 @@ Browser-Login erneut durchlaufen.
   TTL)** — Invalidierung ist rein versions-/environment-getrieben.
 - Die Environment-Auswahl kommt entweder aus `.infisical.json` (`defaultEnvironment`) oder,
   falls in der Run-Config über das Dropdown gewählt, von dort (überschreibt den Default).
+- Zusätzlich zum lokalen Override markiert das Plugin machine-spezifische Secrets jetzt auch
+  serverseitig per Tag, damit sie in der Infisical-Web-App leichter auffindbar sind — Details
+  dazu in Abschnitt 5.
 
-## 5. API-Endpunkte (Infisical-Server)
+## 5. Machine-spezifische Secrets automatisch taggen
+
+Secrets, deren Wert wie ein lokaler Dateipfad aussieht (`Cache.looksLikeUserSpecificPath(...)`,
+z.B. `C:\Users\...`, `/home/...`), werden bei jedem `applyEnvironment()`-Aufruf zusätzlich mit
+einem Tag `specificpaths` in Infisical versehen — nicht um lokal etwas zu überschreiben (das
+macht weiterhin `.infisical.local.json`, siehe Abschnitt 4), sondern damit ein Teammitglied dieses
+Secret in der Web-App per Tag-Filter findet und dort für sich selbst einen
+[Personal Override](https://infisical.com/docs) setzen kann.
+
+```mermaid
+flowchart LR
+    A["Secret aus GET /api/v4/secrets<br/>(inkl. tags-Array)"] --> B{"Wert sieht wie<br/>lokaler Pfad aus?"}
+    B -- Nein --> Z["nichts tun"]
+    B -- Ja --> C{"tags-Array enthält<br/>bereits 'specificpaths'?"}
+    C -- Ja --> Z
+    C -- Nein --> D["PATCH /api/v4/secrets/{key}<br/>mit tagIds: [tagId]"]
+```
+
+Ablauf pro `applyEnvironment()`-Aufruf:
+
+1. `SecretClient.findTagBySlug(...)` — Tag `specificpaths` im Projekt per `GET
+   /api/v1/projects/{projectId}/tags` suchen.
+2. Existiert er nicht, wird er per `SecretClient.createTag(...)` einmalig angelegt
+   (`POST /api/v1/projects/{projectId}/tags`).
+3. Für jedes Secret aus der ohnehin schon geladenen Secrets-Liste: Ist es noch nicht getaggt
+   (`tags`-Array der Secret-Response geprüft — **kein** Extra-API-Call nötig) und sieht der Wert
+   wie ein Pfad aus, wird es per `SecretClient.tagVariable(...)` getaggt
+   (`PATCH /api/v4/secrets/{secretKey}`, Body enthält `tagIds`).
+
+**Wichtige Design-Entscheidung: Tagging ist fail-open.** Ein Fehler beim Tag-Lookup/-Anlegen
+oder beim Taggen eines einzelnen Secrets wird nur geloggt (`Cache.LOG.warn(...)`) und bricht
+`applyEnvironment()` **nicht** ab — die eigentliche Secret-Injection ist die Kernfunktion des
+Plugins und darf nicht an einem Nice-to-have-Feature wie Tagging scheitern (z.B. wenn der
+eingeloggte User keine Schreibrechte auf Tags hat). Das war ursprünglich nicht so: eine erste
+Implementierung ließ `findTagBySlug`/`createTag`/`tagVariable` ungefangen durchschlagen, was in
+`CacheEnvironmentSwitchTest` zu einer echten Regression führte (404 vom Tags-Endpoint hat das
+komplette Secrets-Laden verhindert).
+
+## 6. API-Endpunkte (Infisical-Server)
 
 | Methode & Pfad | Zweck |
 |---|---|
 | `GET /api/v4/secrets?projectId=&environment=` | Secrets inkl. Werte laden |
 | `GET /api/v4/secrets?...&viewSecretValue=false` | Nur Metadaten (Versions-Check) |
 | `GET /api/v1/workspace/{projectId}` | Liste der verfügbaren Environments |
+| `GET /api/v1/projects/{projectId}/tags` | Vorhandene Tags im Projekt auflisten |
+| `POST /api/v1/projects/{projectId}/tags` | Neuen Tag anlegen (Slug + Farbe) |
+| `PATCH /api/v4/secrets/{secretName}` | Secret updaten, u.a. `tagIds` zum Taggen |
 | `POST /api/v1/auth/universal-auth/login` | Machine-Identity-Login — **aktuell nicht in Benutzung**, im Code aber vorhanden |
 
 Alle Aufrufe laufen gegen eine fest hinterlegte Basis-URL (interne, selbstgehostete
 Infisical-Instanz) mit `Authorization: Bearer <jwt>`.
 
-## 6. Secret-Injektion in den Zielprozess
+## 7. Secret-Injektion in den Zielprozess
 
 Das ist der Teil, der am meisten Erklärung braucht: IntelliJ startet je nach Run-Config-Typ den
 Zielprozess auf komplett unterschiedliche Weise — ein einzelner, generischer Hook reicht deshalb
@@ -109,7 +153,7 @@ Der naheliegende generische SDK-Weg (`patchCommandLine`) greift **nur bei Java-a
 Prozessen** — Gradle und Node.js starten ihre Prozesse anders und brauchen deshalb ihren eigenen,
 sprachspezifischen Extension Point.
 
-## 7. Neue Sprache unterstützen — Schritt für Schritt
+## 8. Neue Sprache unterstützen — Schritt für Schritt
 
 Diese Section ist der Einstiegspunkt, wenn das Plugin um eine weitere Sprache (PHP, Python, Go,
 Ruby, .NET, ...) erweitert werden soll.
@@ -163,12 +207,15 @@ ist ausführlich dokumentiert in:
 `InfisicalPlugin/erkenntnisse/2026-07-17-secrets-in-echten-gradle-prozess-injizieren.md`
 (am Beispiel Gradle, aber die Methode ist auf jedes andere Build-Tool übertragbar).
 
-## 8. Bekannte Grenzen
+## 9. Bekannte Grenzen
 
 - Nur eine fest hinterlegte Infisical-Instanz, keine Mehrfach-Instanz-Unterstützung.
 - Kein automatisches Token-Refresh.
 - `gitBranchToEnvironmentMapping` ist im `.infisical.json`-Schema vorgesehen, aber nicht implementiert.
 - Kein zeitbasierter Cache-Ablauf — nur versions-/environment-getriebene Invalidierung.
+- Tagging (Abschnitt 5) ist bewusst fail-open: schlägt es fehl, bekommt der Nutzer davon nichts
+  mit (nur ein Log-Eintrag) — das Secret bleibt dann einfach ungetaggt, bis der nächste
+  `applyEnvironment()`-Aufruf es erneut versucht.
 
 ## Offene Fragen
 

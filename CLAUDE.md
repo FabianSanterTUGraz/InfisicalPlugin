@@ -36,7 +36,9 @@ Keine besonderen projektspezifischen Konventionen (Coding-Style, Branch-Naming, 
 ## Aktuelle Schwerpunkte
 
 <!-- Was wird gerade bearbeitet? Regelmäßig aktualisieren -->
-- Frühe Phase: Gradle-/IntelliJ-Plugin-Grundgerüst vorhanden, noch keine konkrete Feature-Arbeit
+- Kernfunktionalität (Login-Flow, Secret-Abruf/-Injection, Run-Config-Integration) implementiert und getestet
+- Aktuell: Secret-Tagging für machine-spezifische Secrets (Auffindbarkeit in der Web-App), Vorbereitung des ersten Release (Plugin-Verifier, Marketplace-Konventionen, CHANGELOG)
+- Offene TODOs: siehe docs/todos.md
 
 ## Verfügbare Skills
 

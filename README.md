@@ -13,6 +13,7 @@
 - **Automatische Secret-Injection:** Beim Start einer aktivierten Run-Configuration (Gradle/SpringBoot oder npm/Node) werden die Secrets des gewählten Environments automatisch als Umgebungsvariablen in den gestarteten Prozess injiziert — keine lokalen `.env`-Dateien mehr nötig.
 - **Caching mit Versionsabgleich:** Die Secrets werden nicht bei jedem Start neu von der Infisical-Cloud geladen. Stattdessen wird vor jedem Start nur ein leichtgewichtiger Metadaten-Abruf gemacht, der die Versionsnummern der Secrets vergleicht — nur bei tatsächlicher Änderung (oder Umgebungs-Wechsel) werden die vollständigen Secrets neu geladen. Das ist kein Live-Push aus der Web-UI, sondern ein Abgleich, der bei jedem Programmstart passiv mit ausgelöst wird.
 - **Lokale Overrides (`.infisical.local.json`):** Für maschinenspezifische Pfade lassen sich einzelne Secret-Werte lokal überschreiben, ohne die zentralen Cloud-Werte zu verändern; diese Overrides überleben einen Environment-Wechsel.
+- **Automatisches Tagging machine-spezifischer Secrets:** Secrets, die als lokaler Pfad-Override erkannt werden (siehe oben), werden zusätzlich in Infisical selbst mit dem Tag `specificpaths` versehen — damit Teammitglieder sie in der Infisical-Web-App per Tag-Filter finden und dort einen eigenen Personal Override setzen können. Das Tagging ist fail-open: Schlägt es fehl (z. B. fehlende Schreibrechte), wird nur eine Warnung geloggt, das eigentliche Laden der Secrets bricht nicht ab.
 - **Fehlerbehandlung über Notifications:** Fehlende `.infisical.json`, ungültiges/abgelaufenes Token oder HTTP-Fehler bei der API führen zu einer IDE-Benachrichtigung statt zu einem Absturz oder stillem Fehlschlag; bei Gradle-Tasks wird der Task zusätzlich automatisch abgebrochen, damit nicht versehentlich ohne Secrets weitergebaut/gestartet wird.
 - **Pro-Run-Configuration persistierte Einstellungen:** Ob Infisical aktiviert ist und welches Environment gewählt wurde, wird pro Run-Configuration gespeichert und bleibt über IDE-Neustarts hinweg erhalten.
 
@@ -88,6 +89,8 @@ Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen
 Manche Werte haben die Form eines lokalen, maschinenspezifischen Pfads (z. B. `C:/Users/...`, `/Workspace/abuscom/...`) und müssen daher für den eigenen Rechner individuell gesetzt werden. Dafür kann im selben Verzeichnis wie die `.infisical.json`-Datei manuell eine zusätzliche Datei namens `.infisical.local.json` angelegt werden. Das Plugin legt diese Datei **nicht** automatisch an — sie ist ein rein manueller, optionaler Mechanismus für seltene lokale Debugging-Fälle; existiert sie nicht, passiert einfach nichts.
 
 Die lokalen Werte haben Vorrang vor den Werten aus Infisical — damit lässt sich bei Bedarf auch temporär ein einzelner Wert überschreiben. Beim Wechsel des Environments bleiben die lokalen Werte erhalten und müssen beim Zurückwechseln nicht erneut eingetragen werden.
+
+Zusätzlich markiert das Plugin genau diese erkannten Secrets automatisch auch serverseitig in Infisical mit dem Tag `specificpaths` (sichtbar am Secret in der Web-App) — das ist rein informativ fürs Team und hat keinen Einfluss auf den lokalen Override hier.
 
 Die `.infisical.local.json` hat folgende Form:
 

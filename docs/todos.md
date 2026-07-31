@@ -20,6 +20,7 @@
 - [x] #11 Fehlerbehandlung für ungültiges Token, Netzwerkfehler, abgelaufene Auth (Notifications statt Absturz)
 - [x] #19 Plugin-Verifier-Ergebnis (`./gradlew verifyPlugin`) prüfen und alle gemeldeten Kompatibilitäts-/API-Probleme beheben
 - [ ] #24 Plugin-Name in `plugin.xml` enthält laut Plugin-Verifier das Wort "IntelliJ" (Marketplace-Namenskonvention) — umbenennen oder Verifier-Check bewusst muten
+- [x] #25 Machine-spezifische Secrets (per lokalem Pfad-Override erkannt) zusätzlich serverseitig in Infisical mit Tag `specificpaths` markieren, damit Teammitglieder sie in der Web-App finden und einen Personal Override setzen können (fail-open bei Fehlern)
 
 ## Tests
 

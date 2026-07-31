@@ -1,13 +1,12 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
-import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
-import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
-import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretsAPICallResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.*;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 
 import java.io.IOException;
@@ -19,12 +18,14 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class Cache {
+    private static final Logger LOG = Logger.getInstance(Cache.class);
     private static final Cache INSTANCE = new Cache();
     private final Map<String,String> secrets = new HashMap<>();
     private Map<String,String> config;
     private String environment = "";
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
+    private final String SLUG_NAME = "specificpaths";
 
     private Cache(){}
 
@@ -71,10 +72,40 @@ public class Cache {
         environment = newEnvironment;
         secrets.clear();
 
+        TagResponse tag = resolveMachineSpecificTag(projectID, token, secretClient);
+
         SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
 
         for (SecretEntry entry : response.secrets()) {
+            boolean alreadyTagged = entry.tags() != null
+                    && entry.tags().stream().anyMatch(t -> t.slug().equals(SLUG_NAME));
+
+            if(tag != null && !alreadyTagged && looksLikeUserSpecificPath(entry.secretValue()))
+            {
+                try {
+                    secretClient.tagVariable(projectID,entry.secretKey(),environment,token,tag.id());
+                } catch (InfisicalHttpException e) {
+                    LOG.warn("Konnte Secret '" + entry.secretKey() + "' nicht mit '" + SLUG_NAME + "' taggen", e);
+                }
+            }
             secrets.put(entry.secretKey(), entry.secretValue());
+        }
+    }
+
+    /**
+     * Tagging ist ein Nice-to-have (bessere Auffindbarkeit in der Web-App), keine
+     * Voraussetzung fuers Laden der Secrets - ein Fehler hier (fehlende Rechte, Netzwerk,
+     * API-Aenderung) darf applyEnvironment() deshalb nicht scheitern lassen. Liefert null,
+     * wenn der Tag weder gefunden noch angelegt werden konnte; alle Tag-Aufrufe weiter unten
+     * werden dann uebersprungen.
+     */
+    private TagResponse resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
+        try {
+            Optional<TagResponse> existingTag = secretClient.findTagBySlug(projectID, SLUG_NAME, token);
+            return existingTag.isPresent() ? existingTag.get() : secretClient.createTag(projectID, SLUG_NAME, "RED", token);
+        } catch (InfisicalHttpException e) {
+            LOG.warn("Konnte Tag '" + SLUG_NAME + "' nicht abrufen/anlegen", e);
+            return null;
         }
     }
 

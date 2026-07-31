@@ -64,6 +64,8 @@ verifyPlugin:
   extends: .base
   stage: validate
   needs: [prepare]
+  variables:
+    GRADLE_OPTS: "-Xmx4g"
   cache:
     key:
       files:

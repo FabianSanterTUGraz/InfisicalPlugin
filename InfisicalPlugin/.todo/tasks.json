@@ -1,0 +1,299 @@
+[
+  {
+    "id": "TASK_1",
+    "priority": "LOW",
+    "tags": [],
+    "title": "Local überschreibungen statt extra json file",
+    "description": "",
+    "status": "DONE",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 9,
+        "minute": 15,
+        "second": 20,
+        "nano": 62380500
+      }
+    },
+    "finishDate": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 9,
+        "minute": 16,
+        "second": 33,
+        "nano": 982585200
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_3",
+    "priority": "LOW",
+    "tags": [],
+    "title": "brainstorming über das handling von infisical local json file",
+    "description": "",
+    "status": "DONE",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 9,
+        "minute": 15,
+        "second": 56,
+        "nano": 788632700
+      }
+    },
+    "finishDate": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 21,
+        "second": 24,
+        "nano": 72262500
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_8",
+    "priority": "LOW",
+    "tags": [],
+    "title": "erstellen von automatischen tags über machine spezifische paths",
+    "description": "",
+    "status": "DONE",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 9,
+        "minute": 23,
+        "second": 19,
+        "nano": 383101900
+      }
+    },
+    "finishDate": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 21,
+        "second": 31,
+        "nano": 974655300
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_24",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Infisical Dashboard zeigen",
+    "description": "Wie organisiert sind und welche projekte wie man projekte anlegt und wie man ganze env files hinzufügt",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 29,
+        "second": 0,
+        "nano": 883352400
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_29",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Setup infisical CLI installieren und mit server verbinden",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 29,
+        "second": 29,
+        "nano": 743861400
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_35",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Eigentlichen plugin über das repository clonen",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 30,
+        "second": 18,
+        "nano": 563723400
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_42",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Zeigen wie man genau den plugin über die run configurationen aktiviert ",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 30,
+        "second": 49,
+        "nano": 593524200
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_50",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Login zeigen",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 31,
+        "second": 3,
+        "nano": 943327300
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_59",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Wie man enviroments auswählt zeigen",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 31,
+        "second": 27,
+        "nano": 369561000
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_69",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Erwähnen, dass man secrets überschreiben kann mit .infisical.local.json",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 32,
+        "second": 21,
+        "nano": 771930300
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_80",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "erwähnen, dass machine spezifische tasks über die infisical website überschrieben werden können",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 11,
+        "minute": 32,
+        "second": 54,
+        "nano": 803803100
+      }
+    },
+    "isImported": false
+  }
+]

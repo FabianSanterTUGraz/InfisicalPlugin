@@ -8,7 +8,6 @@ import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.intellij.openapi.project.Project;
 
 import java.io.IOException;
@@ -82,37 +81,16 @@ public class Cache {
 
     public void applyLocalEnvironment(Project project) throws IOException {
         Path localInfisicalJson = Paths.get(Objects.requireNonNull(project.getBasePath()),".infisical.local.json");
-        Map<String,String> localOverrides;
-        if (Files.exists(localInfisicalJson)) {
-            localOverrides = readConfig(project,".infisical.local.json");
-            if(localOverrides == null)
-            {
-                localOverrides = new HashMap<>();
-            }
+        if (!Files.exists(localInfisicalJson)) {
+            return;
         }
-        else
-        {
+
+        Map<String, String> localOverrides = readConfig(project, ".infisical.local.json");
+        if (localOverrides == null) {
             localOverrides = new HashMap<>();
         }
 
-        Set<String> missingKeys = findMissingUserSpecificKeys(localOverrides);
-        if(!missingKeys.isEmpty())
-        {
-            appendMissingKeys(localInfisicalJson, localOverrides, missingKeys);
-            throw new IOException("Lokalen Ovveride bitte ausfüllen!!");
-        }
-
         applyOverrides(localOverrides);
-    }
-
-    private Set<String> findMissingUserSpecificKeys(Map<String, String> localOverrides) {
-        Set<String> missing = new HashSet<>();
-        for (String key : secrets.keySet()) {
-            if (looksLikeUserSpecificPath(secrets.get(key)) && !localOverrides.containsKey(key)) {
-                missing.add(key);
-            }
-        }
-        return missing;
     }
 
     private void applyOverrides(Map<String, String> overrides) {
@@ -121,14 +99,6 @@ public class Cache {
                 secrets.put(key, value);
             }
         });
-    }
-
-    private void appendMissingKeys(Path localInfisicalJson, Map<String, String> localOverrides, Set<String> missingKeys) throws IOException {
-        for (String key : missingKeys) {
-            localOverrides.put(key, "");
-        }
-        String json = new GsonBuilder().setPrettyPrinting().create().toJson(localOverrides);
-        Files.writeString(localInfisicalJson, json);
     }
 
     public static Map<String,String> readConfig(Project project,String jsonPath) throws IOException

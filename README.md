@@ -85,7 +85,7 @@ Anschließend den Anweisungen im Terminal folgen, um die Verbindung herzustellen
 
 ## Spezieller Fall für hardcoded machine paths
 
-Manche Werte haben die Form eines lokalen, maschinenspezifischen Pfads (z. B. `C:/Users/...`, `/Workspace/abuscom/...`) und müssen daher für den eigenen Rechner individuell gesetzt werden. Das Plugin erkennt solche Fälle automatisch und legt im selben Verzeichnis wie die `.infisical.json`-Datei eine zusätzliche Datei namens `.infisical.local.json` an. Dort werden diese Werte manuell eingetragen.
+Manche Werte haben die Form eines lokalen, maschinenspezifischen Pfads (z. B. `C:/Users/...`, `/Workspace/abuscom/...`) und müssen daher für den eigenen Rechner individuell gesetzt werden. Dafür kann im selben Verzeichnis wie die `.infisical.json`-Datei manuell eine zusätzliche Datei namens `.infisical.local.json` angelegt werden. Das Plugin legt diese Datei **nicht** automatisch an — sie ist ein rein manueller, optionaler Mechanismus für seltene lokale Debugging-Fälle; existiert sie nicht, passiert einfach nichts.
 
 Die lokalen Werte haben Vorrang vor den Werten aus Infisical — damit lässt sich bei Bedarf auch temporär ein einzelner Wert überschreiben. Beim Wechsel des Environments bleiben die lokalen Werte erhalten und müssen beim Zurückwechseln nicht erneut eingetragen werden.
 
@@ -102,6 +102,8 @@ Die `.infisical.local.json` hat folgende Form:
 Das ist ein sehr spezieller Anwendungsfall und sollte selten vorkommen.
 
 > **Hinweis:** Diese Datei gehört ins `.gitignore` und darf keinesfalls eingecheckt werden (sie enthält Geheimnisse wie eine `.env`-Datei).
+
+> **Achtung:** Beim Eintragen der lokalen Werte muss extrem genau auf das erwartete Format geachtet werden — es reicht nicht immer, einfach den rohen Pfad einzutragen. Im `af-workspace`-Projekt z. B. müssen maschinenspezifische Pfade als `file:C:\...`-URI statt als reiner Pfad-String hinterlegt werden. Welches Format konkret erwartet wird, hängt davon ab, wie der jeweilige Konsument (Build-Tool, Framework, Skript) den Wert weiterverarbeitet — das muss projektspezifisch anhand des tatsächlichen File-Handlings geprüft werden, nicht pauschal angenommen werden.
 
 
 ## Für Gradle/SpringBoot

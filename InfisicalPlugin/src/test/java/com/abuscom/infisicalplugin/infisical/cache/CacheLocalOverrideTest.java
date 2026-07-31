@@ -1,18 +1,14 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * applyLocalEnvironment() does real file I/O against the project's base directory (it needs to
@@ -53,16 +49,14 @@ public class CacheLocalOverrideTest extends BasePlatformTestCase {
         assertEquals("just-a-value", cache.getSecrets().get("PLAIN_KEY"));
     }
 
-    public void testApplyLocalEnvironment_noFileWithUserSpecificSecret_scaffoldsKeyAndThrows() {
+    public void testApplyLocalEnvironment_noFileWithUserSpecificSecret_leavesSecretUntouchedAndNeverCreatesFile() throws IOException {
         cache.getSecrets().put("IDASHX_CONFIG_ROOT", "C:/Users/Abuscom/workspace/idashx-config");
 
-        assertThrows(IOException.class, () -> cache.applyLocalEnvironment(getProject()));
+        cache.applyLocalEnvironment(getProject());
 
-        Map<String, String> written = readLocalOverrideFile();
-        assertTrue(written.containsKey("IDASHX_CONFIG_ROOT"));
-        assertEquals("", written.get("IDASHX_CONFIG_ROOT"));
-        // the run was cancelled before applying anything - the raw, user-specific value must
-        // still be sitting in secrets untouched, not silently overwritten with the placeholder.
+        // .infisical.local.json is a purely manual, opt-in override file for rare local
+        // debugging - applyLocalEnvironment no longer scaffolds/forces one into existence.
+        assertFalse(Files.exists(localOverridePath));
         assertEquals("C:/Users/Abuscom/workspace/idashx-config", cache.getSecrets().get("IDASHX_CONFIG_ROOT"));
     }
 
@@ -84,17 +78,17 @@ public class CacheLocalOverrideTest extends BasePlatformTestCase {
         assertEquals("C:/Users/Abuscom/workspace/idashx-config", cache.getSecrets().get("IDASHX_CONFIG_ROOT"));
     }
 
-    public void testApplyLocalEnvironment_newUserSpecificKeyFromEnvironmentSwitch_appendsWithoutLosingExistingOverride() {
+    public void testApplyLocalEnvironment_keyMissingFromFile_leavesThatSecretAtItsRawValue() throws IOException {
         writeLocalOverrideFile(Map.of("EXISTING_KEY", "C:/Users/Fabian/existing"));
         cache.getSecrets().put("EXISTING_KEY", "C:/Users/Abuscom/existing");
         cache.getSecrets().put("NEW_KEY", "C:/Users/Abuscom/new-from-other-environment");
 
-        assertThrows(IOException.class, () -> cache.applyLocalEnvironment(getProject()));
+        cache.applyLocalEnvironment(getProject());
 
-        Map<String, String> written = readLocalOverrideFile();
-        assertEquals("C:/Users/Fabian/existing", written.get("EXISTING_KEY"));
-        assertTrue(written.containsKey("NEW_KEY"));
-        assertEquals("", written.get("NEW_KEY"));
+        assertEquals("C:/Users/Fabian/existing", cache.getSecrets().get("EXISTING_KEY"));
+        // NEW_KEY has no entry in the manually maintained override file - applyLocalEnvironment
+        // no longer scaffolds it in, it just leaves the raw value alone.
+        assertEquals("C:/Users/Abuscom/new-from-other-environment", cache.getSecrets().get("NEW_KEY"));
     }
 
     public void testApplyLocalEnvironment_nonPathSecret_isNeverRequiredInOverrideFile() throws IOException {
@@ -140,15 +134,6 @@ public class CacheLocalOverrideTest extends BasePlatformTestCase {
     private void writeLocalOverrideFile(Map<String, String> content) {
         try {
             Files.writeString(localOverridePath, new Gson().toJson(content));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Map<String, String> readLocalOverrideFile() {
-        try {
-            Type type = new TypeToken<Map<String, String>>() {}.getType();
-            return new Gson().fromJson(Files.readString(localOverridePath), type);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

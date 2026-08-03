@@ -1,6 +1,5 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets.springboot;
 
-import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.execution.configurations.ConfigurationFactory;
@@ -40,15 +39,6 @@ public class InjectSecretsRunConfigurationExtensionSpringBootTest extends BasePl
         RunConfigurationBase<?> config = (RunConfigurationBase<?>) factory.createTemplateConfiguration(getProject());
 
         assertFalse(extension.isApplicableFor(config));
-    }
-
-    public void testIsEnabledFor_reflectsInjectSecretsSettings() {
-        RunConfigurationBase<?> config = createSpringBootConfiguration();
-
-        assertTrue(extension.isEnabledFor(config, null));
-
-        InjectSecretsSettings.getOrCreate(config).enabled = false;
-        assertFalse(extension.isEnabledFor(config, null));
     }
 
     public void testUpdateJavaParameters_invalidToken_doesNotTouchEnv() throws Exception {

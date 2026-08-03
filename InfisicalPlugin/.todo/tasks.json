@@ -321,30 +321,6 @@
     "isImported": false
   },
   {
-    "id": "TASK_138",
-    "priority": "HIGH",
-    "tags": [
-      "plugin dev"
-    ],
-    "title": "Fixen, dass random gradle npm processe usw einen felher throwen",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 15,
-        "minute": 43,
-        "second": 21,
-        "nano": 339609000
-      }
-    },
-    "isImported": false
-  },
-  {
     "id": "TASK_152",
     "priority": "LOW",
     "tags": [],
@@ -386,6 +362,30 @@
         "minute": 21,
         "second": 56,
         "nano": 707290000
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_183",
+    "priority": "LOW",
+    "tags": [
+      "plugin dev"
+    ],
+    "title": "falsche sachen in readme ausbessern zb caching usw",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 3
+      },
+      "time": {
+        "hour": 9,
+        "minute": 13,
+        "second": 3,
+        "nano": 255271300
       }
     },
     "isImported": false

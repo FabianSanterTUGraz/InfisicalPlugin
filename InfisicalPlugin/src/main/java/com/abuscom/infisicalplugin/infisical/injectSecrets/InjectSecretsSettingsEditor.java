@@ -27,6 +27,8 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final JButton loginButton = new JButton("Login");
     private RunConfigurationBase<?> configuration;
+    private JPanel rootPanel;
+    private volatile boolean environmentsLoaded = false;
 
     public InjectSecretsSettingsEditor() {
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
@@ -92,11 +94,13 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
                     .toArray(String[]::new);
 
             ApplicationManager.getApplication().invokeLater(() -> {
-                environmentComboBox.removeAllItems();
-                for (String env : fetched) {
-                    environmentComboBox.addItem(env);
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fetched);
+                if (settings.selectedEnvironment != null
+                        && java.util.Arrays.asList(fetched).contains(settings.selectedEnvironment)) {
+                    model.setSelectedItem(settings.selectedEnvironment);
                 }
-                environmentComboBox.setSelectedItem(settings.selectedEnvironment);
+                environmentComboBox.setModel(model);
+                environmentsLoaded = true;
             }, ModalityState.any());
         });
     }
@@ -104,7 +108,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     @Override
     protected void applyEditorTo(@NotNull RunConfigurationBase<?> configuration) {
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
-        settings.selectedEnvironment = (String) environmentComboBox.getSelectedItem();
+        settings.enabled = rootPanel.isVisible();
+        if(environmentsLoaded) {
+            settings.selectedEnvironment = (String) environmentComboBox.getSelectedItem();
+        }
     }
 
     @Override
@@ -113,6 +120,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         panel.add(new JLabel("Environment auswählen........."));
         panel.add(environmentComboBox);
         panel.add(loginButton);
+        rootPanel = panel;
         return panel;
     }
 }

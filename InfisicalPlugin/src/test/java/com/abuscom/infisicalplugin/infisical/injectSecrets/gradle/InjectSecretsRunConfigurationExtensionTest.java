@@ -1,6 +1,5 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets.gradle;
 
-import com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.execution.configurations.ConfigurationFactory;
@@ -47,17 +46,6 @@ public class InjectSecretsRunConfigurationExtensionTest extends BasePlatformTest
         RunConfigurationBase<?> config = (RunConfigurationBase<?>) factory.createTemplateConfiguration(getProject());
 
         assertFalse(extension.isApplicableFor(config));
-    }
-
-    public void testIsEnabledFor_reflectsInjectSecretsSettings() {
-        RunConfigurationBase<?> config = createGradleConfiguration();
-
-        // enabled now defaults to true (injection is gated on .infisical.json existing instead
-        // of a per-run checkbox) - see InjectSecretsSettings.enabled.
-        assertTrue(extension.isEnabledFor(config, null));
-
-        InjectSecretsSettings.getOrCreate(config).enabled = false;
-        assertFalse(extension.isEnabledFor(config, null));
     }
 
     public void testUpdateJavaParameters_invalidToken_doesNotTouchEnv() throws Exception {

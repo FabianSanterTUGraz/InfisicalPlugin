@@ -17,8 +17,7 @@ public class InjectSecretsSettings {
     private static final String ATTR_ENABLED = "enabled";
     private static final String ATTR_ENVIRONMENT = "environment";
 
-    //Wenn man debuggen will ohne, dass injected wird einfach auf false setzen.
-    public boolean enabled = true;
+    public boolean enabled = false;
     public String selectedEnvironment = null;
 
     public static InjectSecretsSettings getOrCreate(@NotNull RunConfigurationBase<?> config) {

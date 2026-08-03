@@ -19,7 +19,7 @@
 - [x] #8 Geladene Secrets in Run/Debug-Konfigurationen injizieren (z.B. als Umgebungsvariablen vor Programmstart)
 - [x] #11 Fehlerbehandlung für ungültiges Token, Netzwerkfehler, abgelaufene Auth (Notifications statt Absturz)
 - [x] #19 Plugin-Verifier-Ergebnis (`./gradlew verifyPlugin`) prüfen und alle gemeldeten Kompatibilitäts-/API-Probleme beheben
-- [ ] #24 Plugin-Name in `plugin.xml` enthält laut Plugin-Verifier das Wort "IntelliJ" (Marketplace-Namenskonvention) — umbenennen oder Verifier-Check bewusst muten
+- [x] #24 Plugin-Name in `plugin.xml` enthält laut Plugin-Verifier das Wort "IntelliJ" (Marketplace-Namenskonvention) — umbenennen oder Verifier-Check bewusst muten
 - [x] #25 Machine-spezifische Secrets (per lokalem Pfad-Override erkannt) zusätzlich serverseitig in Infisical mit Tag `specificpaths` markieren, damit Teammitglieder sie in der Web-App finden und einen Personal Override setzen können (fail-open bei Fehlern)
 
 ## Tests
@@ -30,9 +30,9 @@
 ## CI/CD & Release
 
 - [x] #15 `.gitlab-ci.yml` für Build/Test/Plugin-Verifier einrichten (`/gitlab-ci new`)
-- [ ] #21 CHANGELOG.md für das Release befüllen (aktuell nur leerer `## [Unreleased]`-Abschnitt)
+- [x] #21 CHANGELOG.md für das Release befüllen (aktuell nur leerer `## [Unreleased]`-Abschnitt)
 - [x] #22 `development` in `main` mergen und sicherstellen, dass die GitLab-CI-Pipeline (test, verifyPlugin) grün durchläuft, bevor getaggt wird
-- [ ] #23 Release-Tag setzen (z.B. `v1.0.8`), um `buildPlugin`/`publishPlugin` auszulösen (`/version`)
+- [x] #23 Release-Tag setzen (z.B. `v1.0.8`), um `buildPlugin`/`publishPlugin` auszulösen (`/version`)
 
 ## Dokumentation
 

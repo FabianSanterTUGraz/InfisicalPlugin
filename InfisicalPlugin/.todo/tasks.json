@@ -279,7 +279,7 @@
       "Tutorial Plugin"
     ],
     "title": "erwähnen, dass machine spezifische tasks über die infisical website überschrieben werden können",
-    "description": "",
+    "description": "Es ist extrem wichtig auf den exakten pfad zu achten",
     "status": "TODO",
     "date": {
       "date": {
@@ -292,6 +292,100 @@
         "minute": 32,
         "second": 54,
         "nano": 803803100
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_125",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "zeigen wie man genau ein secret überschreibt + wie man secrets hinauf laden kann",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 15,
+        "minute": 41,
+        "second": 37,
+        "nano": 49628700
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_138",
+    "priority": "HIGH",
+    "tags": [
+      "plugin dev"
+    ],
+    "title": "Fixen, dass random gradle npm processe usw einen felher throwen",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 31
+      },
+      "time": {
+        "hour": 15,
+        "minute": 43,
+        "second": 21,
+        "nano": 339609000
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_152",
+    "priority": "LOW",
+    "tags": [],
+    "title": "nochmal alle 3 projekte versuchen und eines für die demo aussucheen ",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 3
+      },
+      "time": {
+        "hour": 8,
+        "minute": 20,
+        "second": 32,
+        "nano": 262000300
+      }
+    },
+    "isImported": false
+  },
+  {
+    "id": "TASK_167",
+    "priority": "MEDIUM",
+    "tags": [
+      "plugin dev"
+    ],
+    "title": "ein projekt aussuchen und für demo vorbereiten",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 3
+      },
+      "time": {
+        "hour": 8,
+        "minute": 21,
+        "second": 56,
+        "nano": 707290000
       }
     },
     "isImported": false

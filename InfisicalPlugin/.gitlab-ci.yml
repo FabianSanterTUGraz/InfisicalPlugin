@@ -3,6 +3,13 @@ stages:
   - validate
   - publish
 
+default:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
 .base:
   image: eclipse-temurin:21-jdk-alpine
   before_script:

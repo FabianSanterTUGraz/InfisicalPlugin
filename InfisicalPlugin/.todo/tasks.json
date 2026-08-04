@@ -389,5 +389,29 @@
       }
     },
     "isImported": false
+  },
+  {
+    "id": "TASK_199",
+    "priority": "LOW",
+    "tags": [
+      "Tutorial Plugin"
+    ],
+    "title": "Zeigen, dass wenn man sich nicht jedes mal neu anmeldenMuss KeePass aktivieren, appearances behaviour, system settings, passwords ",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 3
+      },
+      "time": {
+        "hour": 13,
+        "minute": 59,
+        "second": 16,
+        "nano": 407267900
+      }
+    },
+    "isImported": false
   }
 ]

@@ -5,6 +5,7 @@
 ## Inbox
 
 - [x] #18 Browser-basierten Login-Flow für die Sidebar implementieren: bei Erstanmeldung Weiterleitung zur Infisical-Webanmeldung, Nutzer gibt Credentials einmalig im Browser ein, ein lokaler Callback-Listener (`localhost:8010`) wird temporär vom Plugin geöffnet und empfängt Access-/Refresh-Token, Speicherung über die IntelliJ PasswordSafe-API (damit erneutes Einloggen möglichst entfällt)
+- [ ] #26 Plugin auf JetBrains Marketplace erstveröffentlichen: JetBrains-Account (Hub) anlegen, Plugin hochladen (manuell oder via `./gradlew publishPlugin`), Marketplace-Metadaten (Kategorie, Lizenz, Tags, Beschreibung) ausfüllen, Erstprüfung/Review durch JetBrains abwarten
 
 ## Grundgerüst
 

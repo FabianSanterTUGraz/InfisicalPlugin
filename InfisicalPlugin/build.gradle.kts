@@ -27,6 +27,8 @@ dependencies {
         bundledPlugin("org.jetbrains.plugins.terminal")
         bundledPlugin("JavaScript")
         bundledPlugin("com.intellij.spring.boot")
+        bundledPlugin("org.jetbrains.idea.maven")
+
     }
 }
 
@@ -121,6 +123,16 @@ intellijPlatformTesting {
         register("af-workspace") {
             task {
                 args = listOf("C:/Users/Abuscom/workspace/af-workspace")
+            }
+        }
+    }
+}
+
+intellijPlatformTesting {
+    runIde {
+        register("apache maven") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/maven-test")
             }
         }
     }

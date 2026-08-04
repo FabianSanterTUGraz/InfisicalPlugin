@@ -1,0 +1,9 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.apacheMaven.InjectSecretsRunConfigurationsExtensionMaven"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.apacheMaven.InjectSecretsRunConfigListenerMaven" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
+</idea-plugin>

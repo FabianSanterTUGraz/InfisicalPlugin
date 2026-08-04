@@ -19,15 +19,16 @@
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends optional="true" config-file="withJavaTooling.xml">com.intellij.modules.java</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
+    <depends optional="true" config-file="withJavaTooling.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
+    <depends optional="true" config-file="withApacheMaven.xml">org.jetbrains.idea.maven</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
     </extensions>
 
 
-    <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
 
 
 </idea-plugin>

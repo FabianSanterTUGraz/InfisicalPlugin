@@ -105,311 +105,49 @@
     "isImported": false
   },
   {
-    "id": "TASK_24",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Infisical Dashboard zeigen",
-    "description": "Wie organisiert sind und welche projekte wie man projekte anlegt und wie man ganze env files hinzufügt",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 29,
-        "second": 0,
-        "nano": 883352400
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_29",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Setup infisical CLI installieren und mit server verbinden",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 29,
-        "second": 29,
-        "nano": 743861400
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_35",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Eigentlichen plugin über das repository clonen",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 30,
-        "second": 18,
-        "nano": 563723400
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_42",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Zeigen wie man genau den plugin über die run configurationen aktiviert ",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 30,
-        "second": 49,
-        "nano": 593524200
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_50",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Login zeigen",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 31,
-        "second": 3,
-        "nano": 943327300
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_59",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Wie man enviroments auswählt zeigen",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 31,
-        "second": 27,
-        "nano": 369561000
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_69",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "Erwähnen, dass man secrets überschreiben kann mit .infisical.local.json",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 32,
-        "second": 21,
-        "nano": 771930300
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_80",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "erwähnen, dass machine spezifische tasks über die infisical website überschrieben werden können",
-    "description": "Es ist extrem wichtig auf den exakten pfad zu achten",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 11,
-        "minute": 32,
-        "second": 54,
-        "nano": 803803100
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_125",
-    "priority": "LOW",
-    "tags": [
-      "Tutorial Plugin"
-    ],
-    "title": "zeigen wie man genau ein secret überschreibt + wie man secrets hinauf laden kann",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 7,
-        "day": 31
-      },
-      "time": {
-        "hour": 15,
-        "minute": 41,
-        "second": 37,
-        "nano": 49628700
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_152",
-    "priority": "LOW",
-    "tags": [],
-    "title": "nochmal alle 3 projekte versuchen und eines für die demo aussucheen ",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 8,
-        "day": 3
-      },
-      "time": {
-        "hour": 8,
-        "minute": 20,
-        "second": 32,
-        "nano": 262000300
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_167",
-    "priority": "MEDIUM",
-    "tags": [
-      "plugin dev"
-    ],
-    "title": "ein projekt aussuchen und für demo vorbereiten",
-    "description": "",
-    "status": "TODO",
-    "date": {
-      "date": {
-        "year": 2026,
-        "month": 8,
-        "day": 3
-      },
-      "time": {
-        "hour": 8,
-        "minute": 21,
-        "second": 56,
-        "nano": 707290000
-      }
-    },
-    "isImported": false
-  },
-  {
-    "id": "TASK_183",
+    "id": "TASK_333",
     "priority": "LOW",
     "tags": [
       "plugin dev"
     ],
-    "title": "falsche sachen in readme ausbessern zb caching usw",
+    "title": "Die einzelnen projekte idashx und isa geheimnisse zusammensammeln und sortieren",
     "description": "",
     "status": "TODO",
     "date": {
       "date": {
         "year": 2026,
         "month": 8,
-        "day": 3
+        "day": 5
       },
       "time": {
         "hour": 9,
-        "minute": 13,
-        "second": 3,
-        "nano": 255271300
+        "minute": 2,
+        "second": 47,
+        "nano": 934546800
       }
     },
     "isImported": false
   },
   {
-    "id": "TASK_199",
+    "id": "TASK_338",
     "priority": "LOW",
     "tags": [
-      "Tutorial Plugin"
+      "plugin dev"
     ],
-    "title": "Zeigen, dass wenn man sich nicht jedes mal neu anmeldenMuss KeePass aktivieren, appearances behaviour, system settings, passwords ",
+    "title": "noch um ein gradle projekt fragen",
     "description": "",
     "status": "TODO",
     "date": {
       "date": {
         "year": 2026,
         "month": 8,
-        "day": 3
+        "day": 5
       },
       "time": {
-        "hour": 13,
-        "minute": 59,
-        "second": 16,
-        "nano": 407267900
+        "hour": 9,
+        "minute": 45,
+        "second": 39,
+        "nano": 894711500
       }
     },
     "isImported": false

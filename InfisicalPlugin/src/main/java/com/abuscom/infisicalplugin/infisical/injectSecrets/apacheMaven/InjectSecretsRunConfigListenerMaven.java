@@ -38,6 +38,14 @@ public class InjectSecretsRunConfigListenerMaven implements ExecutionListener  {
             mavenRunnerSettings = new MavenRunnerSettings();
             config.setRunnerSettings(mavenRunnerSettings);
         }
-        mavenRunnerSettings.setEnvironmentProperties(Cache.getInstance().getSecrets());
+
+        try {
+            mavenRunnerSettings.setEnvironmentProperties(Cache.getInstance().getSecrets());
+        }
+        catch(Throwable t)
+        {
+            ErrorNotifier.notify(config.getProject(),
+                    "Infisical: Secret-Injection für Maven fehlgeschlagen (" + t.getClass().getSimpleName() + ": " + t.getMessage() + ") Kann sein, dass die Maven configuration von einer neueren Intelij version geändert wurde");
+        }
     }
 }

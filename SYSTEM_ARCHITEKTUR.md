@@ -20,7 +20,7 @@ flowchart LR
     Browser["System-Browser"]
     Infisical["Infisical-Server<br/>infisical.internal.abuscom.cloud"]
     KeyStore["OS-Keychain<br/>(IntelliJ PasswordSafe)"]
-    Process["Gestarteter Prozess<br/>(Gradle-Daemon / Node / Java-Prozess)"]
+    Process["Gestarteter Prozess<br/>(Gradle-Daemon / Node / Java-Prozess / Maven)"]
 
     UI -- "Login-Klick" --> Browser
     Browser -- "Login-Formular" --> Infisical
@@ -40,7 +40,7 @@ flowchart LR
 | **HTTP-Client** | Generischer REST-Client gegen die Infisical-API | `InfisicalHttpClient` |
 | **Secrets-Zugriff** | Secrets/Environments von Infisical abrufen, machine-spezifische Secrets automatisch taggen | `SecretClient`, `CurrentEnviroments` |
 | **Cache** | Secrets pro Environment zwischenspeichern, Invalidierung, lokale Overrides | `Cache` |
-| **Injection** | Secrets als Env-Variablen in den jeweiligen Run-Prozess einschleusen | `InjectIntoGradleProcess`, `InjectIntoNpmProcess`, `InjectSecretsRunConfigurationExtension` |
+| **Injection** | Secrets als Env-Variablen in den jeweiligen Run-Prozess einschleusen | `InjectIntoGradleProcess`, `InjectIntoNpmProcess`, `InjectSecretsRunConfigurationExtension`, `InjectSecretsRunConfigListenerMaven` |
 | **UI** | Checkbox + Environment-Auswahl in der Run-Config, Login-Button | `InjectSecretsSettingsEditor`, `InjectSecretsSettings` |
 | **Fehlerbehandlung** | Zentrale Notification-Erzeugung, Auth-Fehler erkennen | `ErrorNotifier` |
 
@@ -148,10 +148,14 @@ nicht.
 | Java / Spring Boot | Direkt über `GeneralCommandLine`/`ProcessBuilder` | `RunConfigurationExtension.updateJavaParameters(...)` |
 | Gradle | Über die Gradle Tooling API (kein echter `GeneralCommandLine`) | `GradleExecutionHelperExtension.configureSettings(...)` |
 | npm / Node.js | Über die neuere "Targets API" | `JavaScript.nodeRunConfigurationExtension` → `NodeTargetRun.setEnvData(...)` |
+| Maven | Seit IDE 2025.2 default per generiertem Shell-/Batch-Script (`MavenShCommandLineState`), das **keinen** `RunConfigurationExtension`-Hook aufruft (bytecode-verifiziert gegen 2025.3.5) | `ExecutionListener.processStartScheduled` → `MavenRunnerSettings.setEnvironmentProperties(...)` |
 
 Der naheliegende generische SDK-Weg (`patchCommandLine`) greift **nur bei Java-artigen
 Prozessen** — Gradle und Node.js starten ihre Prozesse anders und brauchen deshalb ihren eigenen,
-sprachspezifischen Extension Point.
+sprachspezifischen Extension Point. Maven ist der Sonderfall: Es *sieht* aus wie der Java-Fall
+(baut historisch ein `JavaParameters`-Objekt), verhält sich aber je nach IDE-Version und internem
+Registry-Flag (`maven.use.scripts`) komplett anders — Details dazu in
+[README.md](README.md#maven-mavenrunconfiguration).
 
 ## 8. Neue Sprache unterstützen — Schritt für Schritt
 
@@ -160,7 +164,8 @@ Ruby, .NET, ...) erweitert werden soll.
 
 ### Schritt 1 — Herausfinden, wie die Ziel-Run-Config ihren Prozess startet
 
-Das entscheidet, welcher der drei Fälle zutrifft:
+Das entscheidet, welcher der folgenden Fälle zutrifft (die Diagramm-Antwort ist dabei nur der
+erste Anhaltspunkt — Fall D unten kann jeden der drei Zweige durchkreuzen):
 
 ```mermaid
 flowchart TD
@@ -177,6 +182,19 @@ flowchart TD
   öffentlich dokumentiert).
 - **Fall C (wie Node.js):** Es muss die framework-spezifische "Targets API"-Extension des
   jeweiligen Plugins gefunden werden.
+- **Fall D (wie Maven, seltener aber tückisch):** Der offensichtliche generische Weg (Fall A)
+  sieht auf den ersten Blick passend aus, greift aber trotzdem nicht — abhängig von IDE-Version
+  und internen Registry-Flags. Maven baute bis IDE 2025.1 tatsächlich ein `JavaParameters`-Objekt
+  (→ Fall A), läuft seit 2025.2 per Default aber über ein generiertes Shell-Script
+  (`MavenShCommandLineState`), das gar keinen `RunConfigurationExtension`-Hook mehr aufruft.
+  **Deshalb vor der Implementierung immer per `javap -c` gegen das tatsächlich gebündelte
+  Plugin-JAR der Ziel-IDE-Version verifizieren, welcher Hook wirklich aufgerufen wird** — nicht
+  anhand der GitHub-master-Quellen annehmen, die von der kompilierten Version abweichen können
+  (Beispiel: der EP `MavenExecutionConfiguratorProvider` existiert im master-Branch, fehlt aber im
+  `maven.jar` von IDE 2025.3.5/2025.3.6). Trifft Fall D zu, bleibt oft nur ein `ExecutionListener`
+  (`processStartScheduled`), der die konkrete RunConfiguration direkt mutiert — nur zulässig, wenn
+  deren internes Settings-Objekt live (nicht kopiert) von der tatsächlichen
+  Prozess-Aufbau-Logik gelesen wird; auch das per Bytecode verifizieren, nicht annehmen.
 
 ### Schritt 2 — Konkrete Umsetzung für Fall A (Standardfall)
 
@@ -216,6 +234,16 @@ ist ausführlich dokumentiert in:
 - Tagging (Abschnitt 5) ist bewusst fail-open: schlägt es fehl, bekommt der Nutzer davon nichts
   mit (nur ein Log-Eintrag) — das Secret bleibt dann einfach ungetaggt, bis der nächste
   `applyEnvironment()`-Aufruf es erneut versucht.
+- Maven-Injection mutiert das persistente `MavenRunnerSettings`-Objekt der Run-Config direkt
+  (siehe Abschnitt 7/README) — im Gegensatz zu Gradle/Spring Boot/Node, wo nur transiente,
+  nie persistierte Objekte befüllt werden. Wird die Run-Config während eines Laufs gespeichert,
+  könnten Secret-Werte dadurch theoretisch in `.idea/runConfigurations/*.xml` landen. Sobald
+  `MavenExecutionConfiguratorProvider` (verfügbar ab IDE 2026.1) zur Mindestanforderung werden
+  kann, sollte dorthin migriert werden.
+- Für Maven-Run-Configs werden Checkbox- und Environment-Auswahl aktuell **nicht** persistiert
+  (`InjectSecretsRunConfigurationsExtensionMaven` implementiert `readExternal`/`writeExternal`
+  noch nicht) — anders als bei Gradle/Spring Boot/npm geht die Auswahl bei einem IDE-Neustart
+  verloren.
 
 ## Offene Fragen
 

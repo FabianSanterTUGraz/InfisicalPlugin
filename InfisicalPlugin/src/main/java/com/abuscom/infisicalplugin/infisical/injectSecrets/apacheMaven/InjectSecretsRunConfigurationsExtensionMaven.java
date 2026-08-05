@@ -20,20 +20,12 @@ import java.util.Map;
 
 public class InjectSecretsRunConfigurationsExtensionMaven extends RunConfigurationExtension {
     @Override
-    public void setEnvironmentProperties(@NotNull Map<String, String> envs){
-        System.out.println("TESTTTTTTTTTTTTTT:::");
-        ErrorNotifier.notify(configuration.getProject(),"No json file given in the root!");
-    }
-
-    @Override
     public boolean isApplicableFor(@NotNull RunConfigurationBase<?> runConfigurationBase) {
         return runConfigurationBase instanceof MavenRunConfiguration;
     }
 
     @Override
-    protected void patchCommandLine(@NotNull RunConfigurationBase configuration, RunnerSettings runnerSettings,
-                                    @NotNull GeneralCommandLine cmdLine, @NotNull String runnerId) throws ExecutionException {
-        ErrorNotifier.notify(configuration.getProject(), "patchCommandLine WIRD AUFGERUFEN");
+    public <T extends RunConfigurationBase<?>> void updateJavaParameters(@NotNull T t, @NotNull JavaParameters javaParameters, @Nullable RunnerSettings runnerSettings) throws ExecutionException {
     }
 
     @Override
@@ -51,12 +43,4 @@ public class InjectSecretsRunConfigurationsExtensionMaven extends RunConfigurati
     public boolean isEnabledFor(@NotNull RunConfigurationBase applicableConfiguration, RunnerSettings runnerSettings) {
         return InjectSecretsSettings.getOrCreate(applicableConfiguration).enabled;
     }
-
-    @Override
-    protected  void attachToProcess(@NotNull RunConfigurationBase configuration,
-                                                                    @NotNull ProcessHandler handler,
-                                                                    RunnerSettings runnerSettings) {
-        ErrorNotifier.notify(configuration.getProject(), "attachToProcess WIRD AUFGERUFEN");
-    }
-
 }

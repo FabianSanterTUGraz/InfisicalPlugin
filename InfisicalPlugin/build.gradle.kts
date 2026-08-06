@@ -142,7 +142,7 @@ intellijPlatformTesting {
     runIde {
         register("Ansible test") {
             task {
-                args = listOf("C:/Users/Abuscom/workspace/maven-test")
+                args = listOf("C:/Users/Abuscom/workspace/ansible")
             }
         }
     }

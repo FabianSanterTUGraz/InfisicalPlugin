@@ -151,5 +151,29 @@
       }
     },
     "isImported": false
+  },
+  {
+    "id": "TASK_344",
+    "priority": "LOW",
+    "tags": [
+      "plugin dev"
+    ],
+    "title": "neue idee allgemein einen generischen weg schaffen, dass der plugin erkennt ob eine env file sich in der root befindet und dann in das reinschreibt mann muss schauen wie man das mit den enviroments und projet id macht aber das ist der unschönere aber deutlich schlauere weg weil es A zu kompliziert wird und B es probleme mit zukünftigen intelij versionen geben kann",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 5
+      },
+      "time": {
+        "hour": 16,
+        "minute": 52,
+        "second": 9,
+        "nano": 364700500
+      }
+    },
+    "isImported": false
   }
 ]

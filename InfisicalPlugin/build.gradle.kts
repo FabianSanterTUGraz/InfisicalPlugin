@@ -28,7 +28,8 @@ dependencies {
         bundledPlugin("JavaScript")
         bundledPlugin("com.intellij.spring.boot")
         bundledPlugin("org.jetbrains.idea.maven")
-
+        compatiblePlugin("PythonCore")
+        compatiblePlugin("Pythonid")
     }
 }
 
@@ -143,6 +144,16 @@ intellijPlatformTesting {
         register("Ansible test") {
             task {
                 args = listOf("C:/Users/Abuscom/workspace/ansible")
+            }
+        }
+    }
+}
+
+intellijPlatformTesting {
+    runIde {
+        register("python test") {
+            task {
+                args = listOf("C:/Users/Abuscom/workspace/python_test_project")
             }
         }
     }

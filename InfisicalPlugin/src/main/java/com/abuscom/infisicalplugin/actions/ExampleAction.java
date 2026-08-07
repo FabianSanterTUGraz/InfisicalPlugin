@@ -33,13 +33,9 @@ public class ExampleAction extends DumbAwareAction {
 
         assert project != null;
         String path =  project.getBasePath();
-        if(!inputPath.isEmpty())
-        {
-            path = Paths.get(Objects.requireNonNull(project.getBasePath()),inputPath).toString();
-        }
+        path = Paths.get(Objects.requireNonNull(project.getBasePath()), inputPath).toString();
         System.out.println("test:" + path + environment);
 
-        assert path != null;
         if(!Files.exists(Paths.get(path)))
         {
             ErrorNotifier.notify(project,"No valid file path!");

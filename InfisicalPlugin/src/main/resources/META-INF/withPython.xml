@@ -1,0 +1,9 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="Pythonid">
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.python.InjectSecretsRunConfigurationsExtensionPython"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.python.InjectSecretsRunConfigListenerPython" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
+</idea-plugin>

@@ -175,5 +175,29 @@
       }
     },
     "isImported": false
+  },
+  {
+    "id": "TASK_351",
+    "priority": "LOW",
+    "tags": [
+      "plugin dev"
+    ],
+    "title": "Kurt und Leo in das projekt als owner einladen",
+    "description": "",
+    "status": "TODO",
+    "date": {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 17
+      },
+      "time": {
+        "hour": 8,
+        "minute": 16,
+        "second": 2,
+        "nano": 660963100
+      }
+    },
+    "isImported": false
   }
 ]

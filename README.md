@@ -1,8 +1,10 @@
 # Plugin Installation & Nutzung
 
-> **Unterstützte IDEs:** IntelliJ IDEA Ultimate (Gradle/Spring-Boot-/Maven-Integration). Für die
-> npm-Integration wird zusätzlich das gebundelte NodeJS-Plugin benötigt (in IntelliJ IDEA
-> Ultimate bereits enthalten, z. B. auch über WebStorm nutzbar).
+> **Unterstützte IDEs:** IntelliJ IDEA Ultimate (Gradle/Spring-Boot-/Maven-/Python-Integration). Für
+> die npm-Integration wird zusätzlich das gebundelte NodeJS-Plugin benötigt (in IntelliJ IDEA
+> Ultimate bereits enthalten, z. B. auch über WebStorm nutzbar). Für die Python-Integration werden
+> zusätzlich die Marketplace-Plugins **PythonCore** und **Pythonid** benötigt (Python-Support ist
+> nicht automatisch in Ultimate enthalten, muss separat installiert werden).
 
 ## Funktionalitäten
 
@@ -10,8 +12,8 @@
 - **Sichere Token-Speicherung:** Das Token wird über die IntelliJ PasswordSafe-API gespeichert, nicht im Klartext.
 - **Automatische Ablaufprüfung:** Vor jedem Start wird geprüft, ob das gespeicherte Token noch gültig ist (JWT-Expiry). Ist es abgelaufen, wird es automatisch verworfen und die Login-Option erscheint wieder.
 - **Environment-Auswahl:** Über ein Dropdown in der Run-Configuration (bzw. im Infisical-Tab bei npm) lässt sich pro Konfiguration die gewünschte Umgebung (z. B. `dev`, `prod`) auswählen.
-- **Automatische Secret-Injection:** Beim Start einer aktivierten Run-Configuration (Gradle/SpringBoot, Maven oder npm/Node) werden die Secrets des gewählten Environments automatisch als Umgebungsvariablen in den gestarteten Prozess injiziert — keine lokalen `.env`-Dateien mehr nötig.
-- **Standardmäßig deaktiviert:** Neu angelegte Run-Configurations haben die Infisical-Injection zunächst deaktiviert; sie muss pro Run-Configuration explizit aktiviert werden (Gradle/Spring Boot/Maven: **Modify options** → Haken bei **Infisical**).
+- **Automatische Secret-Injection:** Beim Start einer aktivierten Run-Configuration (Gradle/SpringBoot, Maven, npm/Node oder Python) werden die Secrets des gewählten Environments automatisch als Umgebungsvariablen in den gestarteten Prozess injiziert — keine lokalen `.env`-Dateien mehr nötig.
+- **Standardmäßig deaktiviert:** Neu angelegte Run-Configurations haben die Infisical-Injection zunächst deaktiviert; sie muss pro Run-Configuration explizit aktiviert werden (Gradle/Spring Boot/Maven/Python: **Modify options** → Haken bei **Infisical**).
 - **Frischer Secret-Abruf bei jedem Start:** Vor jedem Start einer aktivierten Run-Configuration werden die Secrets des gewählten Environments direkt von der Infisical-Cloud abgerufen — kein lokales Zwischenspeichern zwischen Starts, kein Versionsabgleich. Änderungen in der Web-UI sind damit beim nächsten Start sofort wirksam.
 - **Lokale Overrides (`.infisical.local.json`):** Für maschinenspezifische Pfade lassen sich einzelne Secret-Werte lokal überschreiben, ohne die zentralen Cloud-Werte zu verändern; diese Overrides überleben einen Environment-Wechsel.
 - **Automatisches Tagging machine-spezifischer Secrets:** Secrets, die als lokaler Pfad-Override erkannt werden (siehe oben), werden zusätzlich in Infisical selbst mit dem Tag `specificpaths` versehen — damit Teammitglieder sie in der Infisical-Web-App per Tag-Filter finden und dort einen eigenen Personal Override setzen können. Das Tagging ist fail-open: Schlägt es fehl (z. B. fehlende Schreibrechte), wird nur eine Warnung geloggt, das eigentliche Laden der Secrets bricht nicht ab.
@@ -143,6 +145,24 @@ Steuerung bleibt die gleiche jedoch muss Infisical nicht manuell aktiviert werde
 Nach Aktivierung sind die Schritte die selbe wie bei Gradle.
 > Ausführung über das terminal via npm start wird nicht unterstützt! 
 
+## Für Python
+
+Voraussetzung: Die Marketplace-Plugins **PythonCore** (Python Community Edition) und **Pythonid**
+(Python) müssen in der IDE installiert und aktiviert sein — Python-Support ist nicht automatisch
+in IntelliJ IDEA Ultimate enthalten.
+
+Aktivierung läuft identisch zu Gradle/Spring Boot/Maven: Drei-Punkte-Menü neben dem Debug-Symbol →
+**Edit Configurations** → **Modify Options** → Haken bei **Infisical** setzen, danach Login und
+Environment-Auswahl wie gewohnt.
+
+Die injizierten Werte stehen als Umgebungsvariablen des laufenden Python-Prozesses zur Verfügung —
+z. B. lesbar über `os.environ.get(...)`.
+
+> **Bekannte Einschränkung:** Ob Infisical aktiviert ist und welches Environment gewählt wurde,
+> wird für Python-Run-Configurations aktuell **nicht** über IDE-Neustarts hinweg gespeichert
+> (anders als bei Gradle/Spring Boot/npm) — die Checkbox muss nach einem Neustart der IDE erneut
+> gesetzt werden.
+
 ## Fehlermeldungen
 
 Eine Übersicht aller Fehlermeldungen des Plugins und was sie bedeuten findest du in
@@ -168,7 +188,7 @@ Für einen tieferen Einstieg vor größeren Änderungen (z. B. Unterstützung ei
 
 ## Technischer Hintergrund: Wie sich das Plugin in die Run-Prozesse einhakt
 
-Die vier unterstützten Run-Config-Typen (Gradle, native Spring-Boot-Configs, npm/Node, Maven) starten ihre Prozesse intern auf grundverschiedene Arten. Deshalb nutzt das Plugin für jeden Typ einen eigenen, dafür passenden Extension-Point statt eines einzigen generischen Hooks.
+Die fünf unterstützten Run-Config-Typen (Gradle, native Spring-Boot-Configs, npm/Node, Maven, Python) starten ihre Prozesse intern auf grundverschiedene Arten. Deshalb nutzt das Plugin für jeden Typ einen eigenen, dafür passenden Extension-Point statt eines einzigen generischen Hooks.
 
 ### Gradle (`ExternalSystemRunConfiguration`)
 
@@ -205,6 +225,38 @@ Der einzige zuverlässig erreichbare Interventionspunkt ist deshalb `InjectSecre
 **Wichtige Einschränkung:** `MavenRunnerSettings` hat keine Serialisierungs-Sperre — es ist dasselbe Objekt, das IntelliJ beim Speichern der Run-Config in XML schreibt. Anders als bei Gradle/Spring Boot/Node (dort werden transiente, nie persistierte Objekte befüllt) mutiert die Maven-Injection hier potenziell dasselbe Objekt, das in `.idea/runConfigurations/*.xml` landen könnte. Das ist aktuell kein Nice-to-have, sondern die einzige für IDE 2025.3.5 verfügbare Option — ein Maven-eigener, transienter Extension Point existiert dafür (noch) nicht.
 
 Ab **IntelliJ 2026.1** gibt es einen solchen EP: `MavenExecutionConfiguratorProvider` (`org.jetbrains.idea.maven.runner.executionConfigurator`), der eine transiente, mutable Env-Map statt des persistenten Settings-Objekts liefert — deutlich sauberer, aber im `maven.jar` von 2025.3.5/2025.3.6 nachweislich noch nicht enthalten (per `javap` gegen das tatsächlich gecachte JAR verifiziert, nicht nur anhand der GitHub-master-Quellen vermutet). Sobald die Mindest-IDE-Version des Plugins auf 2026.1+ angehoben wird, sollte hierauf migriert werden.
+
+### Python (`AbstractPythonRunConfiguration`)
+
+Python-Run-Configs sind kein `JavaCommandLineState` — es gibt kein `JavaParameters`-Objekt, und
+`updateJavaParameters(...)` existiert auf der dafür relevanten Basisklasse gar nicht erst als
+überschreibbare Methode. Der generische `com.intellij.runConfigurationExtension`, den
+Gradle/Spring-Boot/Maven nutzen, greift bei Python außerdem gar nicht in der "Modify options"-UI:
+Das Python-Plugin definiert dafür einen eigenen Extension-Point,
+`Pythonid.runConfigurationExtension` (Interface `com.jetbrains.python.run.PythonRunConfigurationExtension`,
+Basisklasse `RunConfigurationExtensionBase<AbstractPythonRunConfiguration<?>>`) — per
+Bytecode-Analyse des `intellij.python.community.impl`-Moduls verifiziert.
+
+`InjectSecretsRunConfigurationsExtensionPython extends PythonRunConfigurationExtension`, registriert
+unter `Pythonid.runConfigurationExtension` (nicht unter `com.intellij`, siehe `withPython.xml`),
+sorgt ausschließlich für den Checkbox/Dropdown-Tab in "Modify options" (`isApplicableFor`,
+`isEnabledFor`, `createEditor`). `patchCommandLine(...)` ist hier zwar abstract und muss
+implementiert werden, bleibt aber bewusst leer: Community-Berichte zufolge wird der Callback für
+Python-Configs in der Praxis nicht zuverlässig aufgerufen.
+
+Die eigentliche Injection läuft deshalb — wie bei Maven — über
+`InjectSecretsRunConfigListenerPython implements ExecutionListener`, Event
+`processStartScheduled`. Dort wird direkt `config.getEnvs()` gelesen, die Secrets per
+`putIfAbsent` gemerged (damit manuell in der Run-Config gesetzte Env-Vars nicht überschrieben
+werden) und über `config.setEnvs(...)` zurückgeschrieben.
+
+**Gradle-Dependency-Besonderheit:** `AbstractPythonRunConfiguration` steckt nicht im Pythonid-Plugin
+selbst, sondern im davon abhängigen Basis-Plugin **PythonCore** — Pythonid liefert nur die
+Pro-Zusatzfunktionen (Jupyter, Remote-Interpreter, Profiling). Per Jar-Inspektion (`jar tf`)
+verifiziert: `com/jetbrains/python/run/AbstractPythonRunConfiguration.class` liegt in
+`intellij.python.community.impl.jar` (PythonCore), nicht in irgendeinem Pythonid-Jar. In
+`build.gradle.kts` müssen deshalb **beide** Plugins deklariert werden:
+`compatiblePlugin("PythonCore")` und `compatiblePlugin("Pythonid")`.
 
 ## Secrets-sammeln
 Anbei eine Checkliste von allen Projekten wo die .env files in der infisical Cloud liegen:

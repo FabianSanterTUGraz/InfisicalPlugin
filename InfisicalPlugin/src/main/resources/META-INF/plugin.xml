@@ -28,11 +28,4 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>
     </extensions>
-
-    <actions>
-        <action id="com.abuscom.infisicalplugin.actions.ExampleAction"
-                class="com.abuscom.infisicalplugin.actions.ExampleAction"
-                text="Infisical: Example Action" description="Platzhalter-Action zum Ausprobieren"/>
-    </actions>
-
 </idea-plugin>

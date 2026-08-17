@@ -33,3 +33,6 @@ build/
 .claude/settings.json
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Notizen / Entwurfs-Vorgehensweisen (nicht Teil des Repo-Inhalts)
+ansible-integration-vorgehensweise.txt

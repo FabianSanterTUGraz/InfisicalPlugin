@@ -7,7 +7,7 @@ projekt haben der sinn ist ja eigentlich, dasss man sich ohne zu fragen das teil
 
 Roles Konzept
 Server admin: Leo und meinen account am ende löschen oder alle rechte entziehen
-Organizations admin: würde ich nicht nur leo machen sondern auch Kurt der das projekt wartet später
+Organizations admin: würde ich nicht nur leo machen sondern auch Oliver der das projekt wartet später
 Project admin: jeder der aktiv am projekt mitarbeitet
 
 1.einen Account anlegen für infisical

@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class InjectSecretsSettings {
 
-    public static String[] ENVIRONMENTS = {"LOGIN PLEASE.."};
-    public static String[] PROJECTS = {"LOGIN PLEASE.."};
+    public static String[] ENVIRONMENTS = {"LOGIN PLEASE"};
+    public static String[] PROJECTS = {""};
 
     public static final Key<InjectSecretsSettings> KEY =
             Key.create("com.abuscom.infisicalplugin.InjectSecretsSettings");

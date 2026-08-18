@@ -20,3 +20,9 @@ oder ein anderes konzept für die sicherung ich würde mich nicht zu 100% auf in
 
 Was noch zu ergänzen sein könnte:
 In das abc framework von claude das alles mit aufnehmen, dass er weis wie mit dem plugin gearbeitet wird usw.
+
+
+Liste projekte:
+af-workspace : Kurt  admin : Kurt    envs: afCommonServer, wobi, euroclima,
+idashX : Davide      admin : Davide
+

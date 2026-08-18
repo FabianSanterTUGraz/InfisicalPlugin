@@ -1,6 +1,15 @@
-# Ansible Template – Infisical Secrets Rolle
-
 **TL;DR:** Diese Anleitung beschreibt, wie die `infisical_secrets`-Rolle aus diesem Template-Repo in ein Ansible-Projekt eingebunden wird, um Secrets aus Infisical zu laden.
+
+## Tutorial ansible mit infisical
+
+Die ganze doku kann auf : https://infisical.com/docs/integrations/platforms/ansible gefunden werden
+
+## Installation
+
+```
+ansible-galaxy collection infisical.vault
+pip install infisicalsdk
+```
 
 ## Voraussetzungen
 

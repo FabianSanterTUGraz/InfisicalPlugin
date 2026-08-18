@@ -1,6 +1,7 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.*;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListRequest;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
@@ -26,6 +27,7 @@ public class Cache {
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
     private final String SLUG_NAME = "specificpaths";
+    private final String INFISICAL_JSON = ".infisical.json";
 
     private Cache(){}
 
@@ -50,29 +52,22 @@ public class Cache {
         return environment;
     }
 
-    // make the actual secrets api call and copy .env into cache but only of the current enviroment.
+    // make the actual secrets api call and copy .env into cache but only of the current environment.
     public void setCache(Project project) throws IOException, InfisicalHttpException {
-        config = readConfig(project,".infisical.json");
+        config = readConfig(project,INFISICAL_JSON);
         SecretClient secretClient= new SecretClient(new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL));
         String projectID = config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
         String newEnvironment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
-
         applyEnvironment(projectID, newEnvironment, token, secretClient);
         applyLocalEnvironment(project);
     }
 
-    /**
-     * Always fetches fresh secrets for the given environment from Infisical - no caching, every
-     * call is a real API call. Deliberately free of any Project/GradleExecutionContext dependency
-     * so it's directly testable in plain JUnit (see CacheEnvironmentSwitchTest) without needing a
-     * running IntelliJ Platform Application.
-     */
     void applyEnvironment(String projectID, String newEnvironment, String token, SecretClient secretClient) throws InfisicalHttpException {
         environment = newEnvironment;
         secrets.clear();
 
-        TagResponse tag = resolveMachineSpecificTag(projectID, token, secretClient);
+        TagListRequest tag = resolveMachineSpecificTag(projectID, token, secretClient);
 
         SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
 
@@ -93,9 +88,9 @@ public class Cache {
         }
     }
 
-    private TagResponse resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
+    private TagListRequest resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
         try {
-            Optional<TagResponse> existingTag = secretClient.findTagBySlug(projectID, SLUG_NAME, token);
+            Optional<TagListRequest> existingTag = secretClient.findTagBySlug(projectID, SLUG_NAME, token);
             return existingTag.isPresent() ? existingTag.get() : secretClient.createTag(projectID, SLUG_NAME, "RED", token);
         } catch (InfisicalHttpException e) {
             LOG.warn("Konnte Tag '" + SLUG_NAME + "' nicht abrufen/anlegen", e);
@@ -131,6 +126,13 @@ public class Cache {
         Path configPath = Paths.get(Objects.requireNonNull(project.getBasePath()),jsonPath);
         String JSON = Files.readString(configPath);
         return new Gson().fromJson(JSON,new TypeToken<Map<String, String>>(){}.getType());
+    }
+
+    public static void writeConfig(Project project,String jsonPath,String newWorkspaceId) throws IOException
+    {
+        Map<String,String> file = readConfig(project,".infisical.json");
+        file.put("workspaceId", newWorkspaceId);
+        Files.writeString(Paths.get(project.getBasePath(),jsonPath),new Gson().toJson(file));
     }
 
     public Map<String,String> getSecrets()

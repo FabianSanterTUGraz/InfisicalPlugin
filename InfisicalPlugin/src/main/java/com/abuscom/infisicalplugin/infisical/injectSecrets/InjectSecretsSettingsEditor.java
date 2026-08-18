@@ -1,9 +1,13 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
+import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.cache.Enviroments.CurrentEnviroments;
 import com.abuscom.infisicalplugin.infisical.cache.Enviroments.EnviromentsAPICallResponse;
 import com.abuscom.infisicalplugin.infisical.cache.Enviroments.EnvironmentEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectsResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
@@ -20,19 +24,33 @@ import com.abuscom.infisicalplugin.infisical.login.LoginUser;
 
 import javax.swing.*;
 import java.awt.FlowLayout;
+import java.awt.event.ItemEvent;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
+    private final ComboBox<String> projectComboBox = new ComboBox<>(InjectSecretsSettings.PROJECTS);
     private final JButton loginButton = new JButton("Login");
     private RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
     private volatile boolean environmentsLoaded = false;
+    private volatile boolean projectsLoaded = false;
+    private volatile boolean suppressProjectSelectionEvents = false;
+    private  Map<String,String> projectNameToId = new HashMap<>();
 
     public InjectSecretsSettingsEditor() {
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
         TokenManager.getInstance().addTokenChangeListener(this);
+        projectComboBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED && !suppressProjectSelectionEvents) {
+                onProjectSelected();
+            }
+        });
+
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
     }
 
@@ -47,6 +65,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         updateLoginButtonVisibility(newToken);
         if (newToken != null) {
             loadEnvironments();
+            loadProjects();
         }
     }
 
@@ -62,8 +81,85 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
         environmentComboBox.setSelectedItem(settings.selectedEnvironment);
+        projectComboBox.setSelectedItem(settings.selectedProject);
 
         loadEnvironments();
+        loadProjects();
+    }
+
+    private void loadProjects()
+    {
+        if (configuration == null) {
+            return;
+        }
+        if (!TokenManager.getInstance().isTokenValid()) {
+            return;
+        }
+        String token = TokenManager.getInstance().getTokenFromKeypass();
+        InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
+            SecretClient client = new SecretClient(httpClient);
+
+            ListProjectsResponse response;
+            try {
+                response = client.listProjects(token);
+            } catch (InfisicalHttpException e) {
+                ApplicationManager.getApplication().invokeLater(
+                        () -> ErrorNotifier.notify(configuration.getProject(), e),
+                        ModalityState.any());
+                return;
+            }
+
+            for(ListProjectEntry projectEntry : response.projects())
+            {
+                projectNameToId.put(projectEntry.name(), projectEntry.id());
+                System.out.println(projectEntry.name() + projectEntry.id());
+            }
+
+            String[] fetched = response.projects().stream()
+                    .map(ListProjectEntry::name)
+                    .toArray(String[]::new);
+
+            ApplicationManager.getApplication().invokeLater(() -> {
+            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fetched);
+                if (settings.selectedProject != null
+                        && java.util.Arrays.asList(fetched).contains(settings.selectedProject)) {
+                    model.setSelectedItem(settings.selectedProject);
+                }
+                suppressProjectSelectionEvents = true;
+                projectComboBox.setModel(model);
+                suppressProjectSelectionEvents = false;
+                projectsLoaded = true;
+            }, ModalityState.any());
+        });
+    }
+
+    private void onProjectSelected() {
+        if (configuration == null) {
+            return;
+        }
+        String selectedName = (String) projectComboBox.getSelectedItem();
+        if (selectedName == null) {
+            return;
+        }
+        String id = projectNameToId.get(selectedName);
+        if (id == null) {
+            return;
+        }
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            try {
+                Cache.writeConfig(configuration.getProject(), ".infisical.json", id);
+            } catch (IOException e) {
+                ApplicationManager.getApplication().invokeLater(
+                        () -> ErrorNotifier.notify(configuration.getProject(), e),
+                        ModalityState.any());
+                return;
+            }
+            loadEnvironments();
+        });
     }
 
     private void loadEnvironments() {
@@ -112,12 +208,16 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         if(environmentsLoaded) {
             settings.selectedEnvironment = (String) environmentComboBox.getSelectedItem();
         }
+        if(projectsLoaded) {
+            settings.selectedProject = (String) projectComboBox.getSelectedItem();
+        }
     }
 
     @Override
     protected @NotNull JComponent createEditor() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.add(new JLabel("Environment auswählen........."));
+        panel.add(projectComboBox);
         panel.add(environmentComboBox);
         panel.add(loginButton);
         rootPanel = panel;

@@ -16,6 +16,7 @@ import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,8 +29,8 @@ import java.awt.event.ItemEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
@@ -118,22 +119,8 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
                 projectNameToId.put(projectEntry.name(), projectEntry.id());
             }
 
-            String  resolvedProjectId = null;
-            try {
-                resolvedProjectId = Cache.readConfig(configuration.getProject(),".infisical.json").get("workspaceId");
-            } catch (IOException e) {
-                if (Cache.getInstance().infisicalJsonExists(configuration.getProject())) {
-                    ApplicationManager.getApplication().invokeLater(
-                            () -> ErrorNotifier.notify(configuration.getProject(), e),
-                            ModalityState.any());
-                }
-            }
-            final String finalResolvedProjectId =  resolvedProjectId;
-            final String selectedProjectName = projectNameToId.entrySet().stream()
-                    .filter(e -> e.getValue().equals(finalResolvedProjectId))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .orElse(null);
+            String resolvedProjectId = resolveInfisicalJsonValue("workspaceId");
+            String selectedProjectName = resolveProjectName(resolvedProjectId);
 
             String[] fetched = response.projects().stream()
                     .filter(p -> "secret-manager".equals(p.type()))
@@ -141,10 +128,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
                     .toArray(String[]::new);
 
             ApplicationManager.getApplication().invokeLater(() -> {
-            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fetched);
-                if (selectedProjectName != null
-                        && Arrays.asList(fetched).contains(selectedProjectName)) {
-                    model.setSelectedItem(selectedProjectName);
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fetched);
+                String toSelect = pickPreselection(selectedProjectName, settings.selectedProject, fetched);
+                if (toSelect != null) {
+                    model.setSelectedItem(toSelect);
                 }
                 suppressProjectSelectionEvents = true;
                 projectComboBox.setModel(model);
@@ -152,6 +139,50 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
                 projectsLoaded = true;
             }, ModalityState.any());
         });
+    }
+
+    /**
+     * Liest einen einzelnen Wert (z.B. "workspaceId", "defaultEnvironment") aus der
+     * .infisical.json. Fehlt die Datei schlicht noch (kein Projekt/Environment je gewaehlt),
+     * wird das still ignoriert; existiert die Datei aber und laesst sich trotzdem nicht lesen,
+     * bekommt der User eine Fehlermeldung.
+     */
+    private String resolveInfisicalJsonValue(String key) {
+        Project project = configuration.getProject();
+        try {
+            return Cache.readConfig(project, ".infisical.json").get(key);
+        } catch (IOException e) {
+            if (Cache.getInstance().infisicalJsonExists(project)) {
+                ApplicationManager.getApplication().invokeLater(
+                        () -> ErrorNotifier.notify(project, e),
+                        ModalityState.any());
+            }
+            return null;
+        }
+    }
+
+    private String resolveProjectName(String workspaceId) {
+        return projectNameToId.entrySet().stream()
+                .filter(e -> e.getValue().equals(workspaceId))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * .infisical.json gewinnt immer, wenn der Wert in den aktuell verfuegbaren Optionen vorkommt.
+     * Nur wenn das nicht aufloesbar ist (Datei fehlt/Wert veraltet), zaehlt die zuletzt
+     * gespeicherte Auswahl dieser Run-Configuration.
+     */
+    private static String pickPreselection(String fromInfisicalJson, String fromRunConfig, String[] options) {
+        List<String> available = Arrays.asList(options);
+        if (fromInfisicalJson != null && available.contains(fromInfisicalJson)) {
+            return fromInfisicalJson;
+        }
+        if (fromRunConfig != null && available.contains(fromRunConfig)) {
+            return fromRunConfig;
+        }
+        return null;
     }
 
     private void onProjectSelected() {
@@ -207,11 +238,13 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
                     .map(EnvironmentEntry::slug)
                     .toArray(String[]::new);
 
+            String defaultEnvironment = resolveInfisicalJsonValue("defaultEnvironment");
+
             ApplicationManager.getApplication().invokeLater(() -> {
                 DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fetched);
-                if (settings.selectedEnvironment != null
-                        && java.util.Arrays.asList(fetched).contains(settings.selectedEnvironment)) {
-                    model.setSelectedItem(settings.selectedEnvironment);
+                String toSelect = pickPreselection(defaultEnvironment, settings.selectedEnvironment, fetched);
+                if (toSelect != null) {
+                    model.setSelectedItem(toSelect);
                 }
                 environmentComboBox.setModel(model);
                 environmentsLoaded = true;

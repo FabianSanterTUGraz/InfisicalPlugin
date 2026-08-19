@@ -1,0 +1,144 @@
+# 1:1 translation of .gitlab-ci.yml (stages: prepare -> validate -> publish).
+#
+# Differences from the GitLab version, and why:
+# - No separate "prepare" job: gradle/actions/setup-gradle caches the Gradle
+#   store per job automatically (keyed by wrapper/lockfiles), so GitLab's
+#   manual pull-push/pull cache split isn't needed here.
+# - Jobs run on ubuntu-latest with actions/setup-java instead of the
+#   eclipse-temurin Docker images, since GitHub's cache/artifact actions need
+#   Node.js in the job container and the alpine-based image doesn't have it.
+# - publishPlugin publishes to a GitHub Release (zip + updatePlugins.xml)
+#   instead of GitLab's generic package registry, since GitHub has no
+#   equivalent generic package endpoint. This is a different target than the
+#   existing release.yml (which publishes to the JetBrains Marketplace) -
+#   worth reconciling with that workflow if a self-hosted update site isn't
+#   actually needed on the GitHub side.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+
+jobs:
+  test:
+    name: Test
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Install xvfb + UI test deps
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb libxtst6 libxi6 libxrender1
+
+      - name: Run tests
+        run: xvfb-run --auto-servernum ./gradlew test
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: build/test-results/test/**/*.xml
+
+  verifyPlugin:
+    name: Verify plugin
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Xmx4g
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Run plugin verifier
+        run: ./gradlew verifyPlugin
+
+      - name: Upload verifier report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pluginVerifier-report
+          path: build/reports/pluginVerifier
+          retention-days: 7
+
+  buildPlugin:
+    name: Build plugin
+    if: github.ref_type == 'tag'
+    needs: [verifyPlugin]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build plugin zip
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ./gradlew buildPlugin -Pversion="${VERSION}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: plugin-zip
+          path: build/distributions/*.zip
+
+  publishPlugin:
+    name: Publish plugin
+    if: github.ref_type == 'tag'
+    needs: [buildPlugin]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: plugin-zip
+          path: build/distributions
+
+      - name: Build updatePlugins.xml and publish GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ZIP_PATH=$(ls build/distributions/*.zip)
+          ZIP_NAME=$(basename "$ZIP_PATH")
+          JAR_PATH=$(unzip -l "$ZIP_PATH" | grep -o '[^ ]*/lib/[^ ]*\.jar$' | head -1)
+          unzip -p "$ZIP_PATH" "$JAR_PATH" > /tmp/plugin.jar
+          unzip -p /tmp/plugin.jar META-INF/plugin.xml > /tmp/plugin.xml
+          VERSION=$(grep -o '<version>[^<]*</version>' /tmp/plugin.xml | sed -e 's/<version>//' -e 's/<\/version>//')
+          SINCE_BUILD=$(grep -o 'since-build="[^"]*"' /tmp/plugin.xml | head -1 | cut -d'"' -f2)
+          ZIP_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${ZIP_NAME}"
+          UPDATE_PLUGINS_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/updatePlugins.xml"
+
+          cat > build/distributions/updatePlugins.xml <<EOF
+          <plugins>
+            <plugin id="com.abuscom.infisicalplugin.InfisicalPlugin"
+                    url="${ZIP_URL}"
+                    version="${VERSION}">
+              <idea-version since-build="${SINCE_BUILD}"/>
+            </plugin>
+          </plugins>
+          EOF
+
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            build/distributions/*.zip build/distributions/updatePlugins.xml
+
+          echo "Custom Plugin Repository URL (in IntelliJ eintragen): ${UPDATE_PLUGINS_URL}"

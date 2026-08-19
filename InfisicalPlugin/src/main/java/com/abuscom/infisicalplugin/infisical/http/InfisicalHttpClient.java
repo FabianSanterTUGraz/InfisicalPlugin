@@ -39,6 +39,7 @@ public class InfisicalHttpClient {
                 ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(body);
         requestBuilder.method(method, bodyPublisher);
+        System.out.println(String.format("Sending request to URL: %s", requestBuilder.build().uri()));
 
         HttpResponse<String> response;
         try {

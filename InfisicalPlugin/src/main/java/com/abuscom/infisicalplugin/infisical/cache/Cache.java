@@ -55,7 +55,7 @@ public class Cache {
     // make the actual secrets api call and copy .env into cache but only of the current environment.
     public void setCache(Project project) throws IOException, InfisicalHttpException {
         config = readConfig(project,INFISICAL_JSON);
-        SecretClient secretClient= new SecretClient(new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL));
+        SecretClient secretClient= new SecretClient(new InfisicalHttpClient(resolveBaseUrl(project)));
         String projectID = config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
         String newEnvironment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
@@ -126,6 +126,35 @@ public class Cache {
         Path configPath = Paths.get(Objects.requireNonNull(project.getBasePath()),jsonPath);
         String JSON = Files.readString(configPath);
         return new Gson().fromJson(JSON,new TypeToken<Map<String, String>>(){}.getType());
+    }
+
+    /**
+     * Loest die zu verwendende Infisical-Instanz auf. Reihenfolge:
+     * ".infisical.local.json" (ueberlebt "infisical init", da der CLI diese Datei nicht kennt)
+     * &gt; ".infisical.json" (offizielles CLI-Feld "domain", kann von "infisical init" ueberschrieben werden)
+     * &gt; {@link InfisicalHttpClient#DEFAULT_BASE_URL} als Fallback.
+     */
+    public static String resolveBaseUrl(Project project) {
+        String local = safeReadDomain(project, ".infisical.local.json");
+        if (local != null) {
+            return local;
+        }
+
+        String pinned = safeReadDomain(project, ".infisical.json");
+        if (pinned != null) {
+            return pinned;
+        }
+
+        return InfisicalHttpClient.DEFAULT_BASE_URL;
+    }
+
+    private static String safeReadDomain(Project project, String jsonPath) {
+        try {
+            Map<String, String> config = readConfig(project, jsonPath);
+            return config == null ? null : config.get("domain");
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     public static void writeConfig(Project project,String jsonPath,String newWorkspaceId) throws IOException

@@ -158,4 +158,13 @@ intellijPlatformTesting {
         }
     }
 }
+intellijPlatformTesting {
+    runIde {
+        register("Marketplace") {
+            task {
+                args = listOf("C:/Users/Abuscom/Desktop/demonstration_marketplace/some_project")
+            }
+        }
+    }
+}
 

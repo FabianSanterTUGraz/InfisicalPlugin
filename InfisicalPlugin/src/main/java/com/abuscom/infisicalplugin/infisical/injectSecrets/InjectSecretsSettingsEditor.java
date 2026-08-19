@@ -101,7 +101,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(Cache.resolveBaseUrl(configuration.getProject()));
             SecretClient client = new SecretClient(httpClient);
 
             ListProjectsResponse response;
@@ -222,7 +222,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(Cache.resolveBaseUrl(configuration.getProject()));
             CurrentEnviroments environmentsClient = new CurrentEnviroments(httpClient);
 
             EnviromentsAPICallResponse response;

@@ -69,12 +69,13 @@ Dann wird man umgeleitet um sich einmalig anzumelden.
 ## Konfiguration: `.infisical.json`
 
 Damit das Plugin funktioniert, muss im Projekt-Root eine `.infisical.json`-Datei mit folgendem Format vorhanden sein:
-
+Wichtig die domain muss seperat eingegeben je nachdem ob man selfhost oder die öffentliche domain benutzt. 
 ```json
 {
   "workspaceId": "...…..-....-....-....-............",
   "defaultEnvironment": "dev",
-  "gitBranchToEnvironmentMapping": null
+  "gitBranchToEnvironmentMapping": null,
+  "domain" : "https://eu.infisical.com"
 }
 ```
 

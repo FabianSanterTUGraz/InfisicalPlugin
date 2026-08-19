@@ -16,7 +16,7 @@ selbst einen Personal Override setzen können.
 
 Betroffene Datei: `InfisicalPlugin/src/main/java/com/abuscom/infisicalplugin/infisical/cache/Cache.java`
 (Methode `applyEnvironment`, Helper `resolveMachineSpecificTag`), zugehöriger Client in
-`SecretClient.java`, Response-Model in `SecretEntry.java`/`TagResponse`.
+`SecretClient.java`, Response-Model in `SecretEntry.java`/`TagListRequest`.
 
 ## Erkenntnis
 
@@ -84,4 +84,4 @@ niemals verhindern. Umgesetzte Lösung:
   zurückkommt oder in einem Wrapper-Feld wie `{"tag": {...}}` steckt) wurde nur gegen die
   öffentliche Doku/Community-Wissen verifiziert, nicht gegen die echte, selbstgehostete
   Infisical-Instanz. Falls das beim ersten echten Testlauf nicht passt, ist das der erste Ort
-  zum Nachschauen (`SecretClient.createTag`/`TagResponse`).
+  zum Nachschauen (`SecretClient.createTag`/`TagListRequest`).

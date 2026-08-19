@@ -8,7 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class InjectSecretsSettings {
 
-    public static String[] ENVIRONMENTS = {"LOGIN PLEASE.."};
+    public static String[] ENVIRONMENTS = {"LOGIN PLEASE"};
+    public static String[] PROJECTS = {""};
 
     public static final Key<InjectSecretsSettings> KEY =
             Key.create("com.abuscom.infisicalplugin.InjectSecretsSettings");
@@ -16,9 +17,11 @@ public class InjectSecretsSettings {
     private static final String ELEMENT_NAME = "InfisicalSecretsInjection";
     private static final String ATTR_ENABLED = "enabled";
     private static final String ATTR_ENVIRONMENT = "environment";
+    private static final String ATTR_PROJECT = "project";
 
     public boolean enabled = false;
     public String selectedEnvironment = null;
+    public String selectedProject = null;
 
     public static InjectSecretsSettings getOrCreate(@NotNull RunConfigurationBase<?> config) {
         InjectSecretsSettings settings = config.getCopyableUserData(KEY);
@@ -41,6 +44,9 @@ public class InjectSecretsSettings {
         settings.selectedEnvironment = child != null
                 ? child.getAttributeValue(ATTR_ENVIRONMENT, (String) null)
                 : null;
+        settings.selectedProject = child != null
+                ? child.getAttributeValue(ATTR_PROJECT, (String) null)
+                : null;
     }
 
     public static void writeExternal(@NotNull RunConfigurationBase<?> configuration, @NotNull Element element) {
@@ -49,6 +55,9 @@ public class InjectSecretsSettings {
         child.setAttribute(ATTR_ENABLED, String.valueOf(settings.enabled));
         if (settings.selectedEnvironment != null) {
             child.setAttribute(ATTR_ENVIRONMENT, settings.selectedEnvironment);
+        }
+        if (settings.selectedProject != null) {
+            child.setAttribute(ATTR_PROJECT, settings.selectedProject);
         }
         element.addContent(child);
     }

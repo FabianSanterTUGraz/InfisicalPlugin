@@ -1,5 +1,8 @@
 package com.abuscom.infisicalplugin.infisical.cache.Secrets;
 
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectsResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListRequest;
 import com.abuscom.infisicalplugin.infisical.http.HttpApiResponse;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
@@ -45,7 +48,7 @@ public class SecretClient {
         return gson.fromJson(response.body(), SecretsAPICallResponse.class);
     }
 
-    public TagResponse createTag(String projectId, String slug, String color, String token) throws InfisicalHttpException
+    public TagListRequest createTag(String projectId, String slug, String color, String token) throws InfisicalHttpException
     {
         String body = gson.toJson(Map.of("slug", slug, "color", color));
 
@@ -55,7 +58,7 @@ public class SecretClient {
                 Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
                 body
         );
-        return gson.fromJson(response.body(), TagResponse.class);
+        return gson.fromJson(response.body(), TagListRequest.class);
     }
 
     public void tagVariable(String projectID, String variableName , String environment, String token,String tagId) throws InfisicalHttpException
@@ -71,7 +74,7 @@ public class SecretClient {
         );
     }
 
-    public Optional<TagResponse> findTagBySlug(String projectID, String slug, String token) throws InfisicalHttpException
+    public Optional<TagListRequest> findTagBySlug(String projectID, String slug, String token) throws InfisicalHttpException
     {
         HttpApiResponse response = httpClient.send(
                 "GET",
@@ -83,5 +86,13 @@ public class SecretClient {
         return list.tags().stream()
                 .filter(t -> t.slug().equals(slug))
                 .findFirst();
+    }
+
+    public ListProjectsResponse listProjects(String token) throws InfisicalHttpException
+    {
+        HttpApiResponse response = httpClient.send("GET", PROJECTS_PATH, Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
+                null);
+        System.out.println(response.body());
+        return gson.fromJson(response.body(), ListProjectsResponse.class);
     }
 }

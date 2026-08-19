@@ -20,6 +20,7 @@ on:
   push:
     branches: ['**']
     tags: ['v*']
+  workflow_dispatch: {}
 
 jobs:
   test:

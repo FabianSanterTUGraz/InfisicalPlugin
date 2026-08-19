@@ -23,6 +23,9 @@
       <extension name="com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsRunConfigurationExtension">
         <InfisicalSecretsInjection enabled="false" environment="LOGIN PLEASE.." />
       </extension>
+      <extension name="com.abuscom.infisicalplugin.infisical.injectSecrets.gradle.InjectSecretsRunConfigurationExtension">
+        <InfisicalSecretsInjection enabled="false" />
+      </extension>
     </EXTENSION>
     <DebugAllEnabled>false</DebugAllEnabled>
     <RunAsTest>false</RunAsTest>

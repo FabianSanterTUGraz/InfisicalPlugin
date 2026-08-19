@@ -267,7 +267,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     @Override
     protected @NotNull JComponent createEditor() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.add(new JLabel("Environment auswählen........."));
+        panel.add(new JLabel("Projekt/Environment auswählen"));
         panel.add(projectComboBox);
         panel.add(environmentComboBox);
         panel.add(loginButton);

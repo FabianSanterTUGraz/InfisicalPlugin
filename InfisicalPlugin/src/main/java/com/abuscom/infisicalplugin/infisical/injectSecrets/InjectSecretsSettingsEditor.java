@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
@@ -115,18 +116,35 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             for(ListProjectEntry projectEntry : response.projects())
             {
                 projectNameToId.put(projectEntry.name(), projectEntry.id());
-                System.out.println(projectEntry.name() + projectEntry.id());
             }
 
+            String  resolvedProjectId = null;
+            try {
+                resolvedProjectId = Cache.readConfig(configuration.getProject(),".infisical.json").get("workspaceId");
+            } catch (IOException e) {
+                if (Cache.getInstance().infisicalJsonExists(configuration.getProject())) {
+                    ApplicationManager.getApplication().invokeLater(
+                            () -> ErrorNotifier.notify(configuration.getProject(), e),
+                            ModalityState.any());
+                }
+            }
+            final String finalResolvedProjectId =  resolvedProjectId;
+            final String selectedProjectName = projectNameToId.entrySet().stream()
+                    .filter(e -> e.getValue().equals(finalResolvedProjectId))
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .orElse(null);
+
             String[] fetched = response.projects().stream()
+                    .filter(p -> "secret-manager".equals(p.type()))
                     .map(ListProjectEntry::name)
                     .toArray(String[]::new);
 
             ApplicationManager.getApplication().invokeLater(() -> {
             DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fetched);
-                if (settings.selectedProject != null
-                        && java.util.Arrays.asList(fetched).contains(settings.selectedProject)) {
-                    model.setSelectedItem(settings.selectedProject);
+                if (selectedProjectName != null
+                        && Arrays.asList(fetched).contains(selectedProjectName)) {
+                    model.setSelectedItem(selectedProjectName);
                 }
                 suppressProjectSelectionEvents = true;
                 projectComboBox.setModel(model);

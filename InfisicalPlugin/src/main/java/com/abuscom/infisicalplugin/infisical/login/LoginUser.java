@@ -1,7 +1,7 @@
 package com.abuscom.infisicalplugin.infisical.login;
 
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
-import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
+import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.login.LoginCallBackServer;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.project.Project;
@@ -21,13 +21,13 @@ public class LoginUser {
         });
         try {
             server.startServer();
-            BrowserUtil.browse(buildLoginUrl());
+            BrowserUtil.browse(buildLoginUrl(project));
         } catch (IOException ex) {
             ErrorNotifier.notify(project,ex);
         }
     }
 
-    private static String buildLoginUrl() {
-        return InfisicalHttpClient.DEFAULT_BASE_URL + "/login?callback_port=" + LOGIN_CALLBACK_PORT;
+    private static String buildLoginUrl(Project project) {
+        return Cache.resolveBaseUrl(project) + "/login?callback_port=" + LOGIN_CALLBACK_PORT;
     }
 }

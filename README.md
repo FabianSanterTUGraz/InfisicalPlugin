@@ -29,7 +29,7 @@
 2. Über `+` folgende URL eintragen (einmalig):
 
    ```
-   https://gitlab.abuscom.cloud/api/v4/projects/255/packages/generic/infisical-plugin/repository/updatePlugins.xml
+   https://github.com/FabianSanterTUGraz/InfisicalPlugin/releases/latest/download/updatePlugins.xml
    ```
    ![Alt-Text](docs/ExampleScreenshots/custompluginrepositories.png)
 

@@ -50,16 +50,14 @@ npm update -g @infisical/cli
 
 Alternativ alle Installationsmöglichkeiten: https://infisical.com/docs/cli/overview#debian%2Fubuntu
 
-## Verbindung mit der abuscom instanz
+## Verbindung mit der Infisical-Instanz
 
-Damit man im nächsten schritt die init funktion aufrufen kann muss sich erstmals über die infisical CLI mit dem abuscom.internal server zu verbinden.
+Damit man im nächsten Schritt die init-Funktion aufrufen kann, muss man sich erstmals über die infisical CLI verbinden. Das Plugin spricht immer fest mit `https://app.infisical.eu` - es gibt keine Möglichkeit mehr, darüber eine andere (z.B. selfhosted) Instanz auszuwählen.
 
 ![Alt-Text](docs/ExampleScreenshots/anmeldung_cli.png)
 
-Entweder bereits bestehende internal domain auswählen oder diese hinzufügen:
-
 ```
-   https://infisical.internal.abuscom.cloud
+   https://app.infisical.eu
    ```
 
 ![Alt-Text](docs/ExampleScreenshots/select_domain.png)
@@ -69,13 +67,11 @@ Dann wird man umgeleitet um sich einmalig anzumelden.
 ## Konfiguration: `.infisical.json`
 
 Damit das Plugin funktioniert, muss im Projekt-Root eine `.infisical.json`-Datei mit folgendem Format vorhanden sein:
-Wichtig die domain muss seperat eingegeben je nachdem ob man selfhost oder die öffentliche domain benutzt. 
 ```json
 {
   "workspaceId": "...…..-....-....-....-............",
   "defaultEnvironment": "dev",
-  "gitBranchToEnvironmentMapping": null,
-  "domain" : "https://eu.infisical.com"
+  "gitBranchToEnvironmentMapping": null
 }
 ```
 

@@ -21,13 +21,13 @@ public class LoginUser {
         });
         try {
             server.startServer();
-            BrowserUtil.browse(buildLoginUrl(project));
+            BrowserUtil.browse(buildLoginUrl());
         } catch (IOException ex) {
             ErrorNotifier.notify(project,ex);
         }
     }
 
-    private static String buildLoginUrl(Project project) {
-        return Cache.resolveBaseUrl(project) + "/login?callback_port=" + LOGIN_CALLBACK_PORT;
+    private static String buildLoginUrl() {
+        return Cache.resolveBaseUrl() + "/login?callback_port=" + LOGIN_CALLBACK_PORT;
     }
 }

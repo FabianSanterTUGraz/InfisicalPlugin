@@ -92,7 +92,6 @@ public class SecretClient {
     {
         HttpApiResponse response = httpClient.send("GET", PROJECTS_PATH, Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
                 null);
-        System.out.println(response.body());
         return gson.fromJson(response.body(), ListProjectsResponse.class);
     }
 }

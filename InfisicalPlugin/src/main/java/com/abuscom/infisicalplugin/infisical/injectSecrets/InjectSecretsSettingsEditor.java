@@ -13,6 +13,7 @@ import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
@@ -31,20 +32,29 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.intellij.icons.AllIcons;
+
+import static com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient.DEFAULT_BASE_URL;
 
 public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final ComboBox<String> projectComboBox = new ComboBox<>(InjectSecretsSettings.PROJECTS);
     private final JButton loginButton = new JButton("Login");
+    private final JButton linkButton  = new JButton(AllIcons.General.Information);
     private RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
     private volatile boolean environmentsLoaded = false;
     private volatile boolean projectsLoaded = false;
     private volatile boolean suppressProjectSelectionEvents = false;
     private  Map<String,String> projectNameToId = new HashMap<>();
+    private String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
+    private String ProjectId;
+
 
     public InjectSecretsSettingsEditor() {
+        linkButton.addActionListener(e -> redirectToInfisicalProject());
+
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
         TokenManager.getInstance().addTokenChangeListener(this);
         projectComboBox.addItemListener(e -> {
@@ -54,6 +64,11 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         });
 
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
+    }
+
+    public void redirectToInfisicalProject()
+    {
+        BrowserUtil.browse(urlToProjectView + ProjectId + "/overview");
     }
 
     @Override
@@ -95,13 +110,14 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             return;
         }
         if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
         String token = TokenManager.getInstance().getTokenFromKeypass();
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(DEFAULT_BASE_URL);
             SecretClient client = new SecretClient(httpClient);
 
             ListProjectsResponse response;
@@ -193,14 +209,14 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         if (selectedName == null) {
             return;
         }
-        String id = projectNameToId.get(selectedName);
-        if (id == null) {
+        ProjectId = projectNameToId.get(selectedName);
+        if (ProjectId == null) {
             return;
         }
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             try {
-                Cache.writeConfig(configuration.getProject(), ".infisical.json", id);
+                Cache.writeConfig(configuration.getProject(), ".infisical.json", ProjectId);
             } catch (IOException e) {
                 ApplicationManager.getApplication().invokeLater(
                         () -> ErrorNotifier.notify(configuration.getProject(), e),
@@ -216,13 +232,14 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             return;
         }
         if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
         String token = TokenManager.getInstance().getTokenFromKeypass();
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(configuration);
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            InfisicalHttpClient httpClient = new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL);
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(DEFAULT_BASE_URL);
             CurrentEnviroments environmentsClient = new CurrentEnviroments(httpClient);
 
             EnviromentsAPICallResponse response;
@@ -271,6 +288,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         panel.add(projectComboBox);
         panel.add(environmentComboBox);
         panel.add(loginButton);
+        panel.add(linkButton);
         rootPanel = panel;
         return panel;
     }

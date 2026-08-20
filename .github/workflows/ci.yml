@@ -118,6 +118,8 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v8
         with:
           name: plugin-zip
@@ -148,6 +150,7 @@ jobs:
           EOF
 
           gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
             --title "${GITHUB_REF_NAME}" \
             build/distributions/*.zip build/distributions/updatePlugins.xml
 

@@ -94,4 +94,16 @@ public class SecretClient {
                 null);
         return gson.fromJson(response.body(), ListProjectsResponse.class);
     }
+
+    public void createEnvironment(String projectID, String newName, String token) throws InfisicalHttpException
+    {
+        String body = gson.toJson(Map.of("name", newName, "slug", newName, "position", 1));
+
+        httpClient.send(
+                "POST",
+                PROJECTS_PATH + "/" + projectID + "/environments",
+                Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
+                body
+        );
+    }
 }

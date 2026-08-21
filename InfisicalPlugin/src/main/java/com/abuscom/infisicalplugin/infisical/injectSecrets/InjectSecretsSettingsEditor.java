@@ -10,6 +10,8 @@ import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProj
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewProjektPanel;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewEnvironment;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
@@ -32,7 +34,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.intellij.icons.AllIcons;
 
@@ -45,8 +46,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
     private final JButton loginButton = new JButton("Login");
     private final JButton linkButton  = new JButton(AllIcons.General.Information);
+    private final JButton buttonA = new JButton("Button A");
+    private final JButton buttonB = new JButton("Neues environment erstellen");
 
-    private RunConfigurationBase<?> configuration;
+    private static RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
 
     private volatile boolean environmentsLoaded = false;
@@ -54,7 +57,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private volatile boolean suppressProjectSelectionEvents = false;
 
     private  Map<String,String> projectNameToId = new HashMap<>();
-    private String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
+    private static String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
     private String ProjectId;
     private Map <String,String> infisicalConfig;
 
@@ -63,6 +66,8 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         linkButton.addActionListener(e -> redirectToInfisicalProject());
 
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
+        buttonA.addActionListener(e -> new NewProjektPanel(configuration != null ? configuration.getProject() : null).show());
+        buttonB.addActionListener(e -> new NewEnvironment(configuration != null ? configuration.getProject() : null).show());
         TokenManager.getInstance().addTokenChangeListener(this);
         projectComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED && !suppressProjectSelectionEvents) {
@@ -76,7 +81,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
     }
 
-    public void redirectToInfisicalProject(){
+    public static void redirectToInfisicalProject(){
         if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
         {
             BrowserUtil.browse(urlToProjectView);
@@ -179,7 +184,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
      * wird das still ignoriert; existiert die Datei aber und laesst sich trotzdem nicht lesen,
      * bekommt der User eine Fehlermeldung.
      */
-    private String resolveInfisicalJsonValue(String key) {
+    private static String resolveInfisicalJsonValue(String key) {
         Project project = configuration.getProject();
         try {
             return Cache.readConfig(project, ".infisical.json").get(key);
@@ -299,12 +304,22 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
     @Override
     protected @NotNull JComponent createEditor() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.add(new JLabel("Projekt/Environment"));
-        panel.add(projectComboBox);
-        panel.add(environmentComboBox);
-        panel.add(loginButton);
-        panel.add(linkButton);
+        JPanel topRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topRow.add(new JLabel("Projekt/Environment"));
+        topRow.add(projectComboBox);
+        topRow.add(environmentComboBox);
+        topRow.add(loginButton);
+        topRow.add(linkButton);
+
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomRow.add(buttonA);
+        bottomRow.add(buttonB);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(topRow);
+        panel.add(bottomRow);
+
         rootPanel = panel;
         return panel;
     }

@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.intellij.icons.AllIcons;
 
 import static com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient.DEFAULT_BASE_URL;
@@ -40,19 +42,24 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final ComboBox<String> projectComboBox = new ComboBox<>(InjectSecretsSettings.PROJECTS);
+
     private final JButton loginButton = new JButton("Login");
     private final JButton linkButton  = new JButton(AllIcons.General.Information);
+
     private RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
+
     private volatile boolean environmentsLoaded = false;
     private volatile boolean projectsLoaded = false;
     private volatile boolean suppressProjectSelectionEvents = false;
+
     private  Map<String,String> projectNameToId = new HashMap<>();
     private String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
     private String ProjectId;
+    private Map <String,String> infisicalConfig;
 
 
-    public InjectSecretsSettingsEditor() {
+    public InjectSecretsSettingsEditor(){
         linkButton.addActionListener(e -> redirectToInfisicalProject());
 
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
@@ -63,12 +70,21 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             }
         });
 
+        projectComboBox.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXX");
+        environmentComboBox.setPrototypeDisplayValue("XXXXXXXXXXXX");
+
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
     }
 
-    public void redirectToInfisicalProject()
-    {
-        BrowserUtil.browse(urlToProjectView + ProjectId + "/overview");
+    public void redirectToInfisicalProject(){
+        if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
+        {
+            BrowserUtil.browse(urlToProjectView);
+            return;
+        }
+
+        String workspaceId =  resolveInfisicalJsonValue("workspaceId");
+        BrowserUtil.browse(urlToProjectView  + workspaceId +  "/overview");
     }
 
     @Override
@@ -284,7 +300,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     @Override
     protected @NotNull JComponent createEditor() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.add(new JLabel("Projekt/Environment auswählen"));
+        panel.add(new JLabel("Projekt/Environment"));
         panel.add(projectComboBox);
         panel.add(environmentComboBox);
         panel.add(loginButton);

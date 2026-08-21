@@ -22,12 +22,15 @@ public class Cache {
     private static final Logger LOG = Logger.getInstance(Cache.class);
     private static final Cache INSTANCE = new Cache();
     private final Map<String,String> secrets = new HashMap<>();
+
     private Map<String,String> config;
     private String environment = "";
+
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
+
     private final String SLUG_NAME = "specificpaths";
-    private final String INFISICAL_JSON = ".infisical.json";
+    public static final String INFISICAL_JSON = ".infisical.json"; //Öffentlich bekannt kein Sicherheitsrisiko
 
     private Cache(){}
 

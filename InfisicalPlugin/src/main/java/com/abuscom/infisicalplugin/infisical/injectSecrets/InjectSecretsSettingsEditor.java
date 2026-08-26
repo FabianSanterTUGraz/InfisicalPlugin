@@ -10,7 +10,6 @@ import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProj
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
-import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewProjektPanel;
 import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewEnvironment;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
@@ -46,8 +45,8 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
     private final JButton loginButton = new JButton("Login");
     private final JButton linkButton  = new JButton(AllIcons.General.Information);
-    private final JButton buttonA = new JButton("Button A");
-    private final JButton buttonB = new JButton("Neues environment erstellen");
+    private final JButton accessControlButton = new JButton("Access Control");
+    private final JButton newEnvironmentButton = new JButton("Neues environment erstellen");
 
     private static RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
@@ -59,16 +58,15 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private  Map<String,String> projectNameToId = new HashMap<>();
     private static String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
     private String ProjectId;
-    private Map <String,String> infisicalConfig;
-
 
     public InjectSecretsSettingsEditor(){
-        linkButton.addActionListener(e -> redirectToInfisicalProject());
-
+        linkButton.addActionListener(e -> openInfisicalDashboardSpecificURL("overview"));
+        accessControlButton.addActionListener(e -> openInfisicalDashboardSpecificURL("/access-management?selectedTab=members"));
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
-        buttonA.addActionListener(e -> new NewProjektPanel(configuration != null ? configuration.getProject() : null).show());
-        buttonB.addActionListener(e -> new NewEnvironment(configuration != null ? configuration.getProject() : null).show());
+        newEnvironmentButton.addActionListener(e -> new NewEnvironment(configuration != null ? configuration.getProject() : null).show());
+
         TokenManager.getInstance().addTokenChangeListener(this);
+
         projectComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED && !suppressProjectSelectionEvents) {
                 onProjectSelected();
@@ -79,17 +77,6 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         environmentComboBox.setPrototypeDisplayValue("XXXXXXXXXXXX");
 
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
-    }
-
-    public static void redirectToInfisicalProject(){
-        if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
-        {
-            BrowserUtil.browse(urlToProjectView);
-            return;
-        }
-
-        String workspaceId =  resolveInfisicalJsonValue("workspaceId");
-        BrowserUtil.browse(urlToProjectView  + workspaceId +  "/overview");
     }
 
     @Override
@@ -123,6 +110,17 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
 
         loadEnvironments();
         loadProjects();
+    }
+
+    public static void openInfisicalDashboardSpecificURL(String URL) {
+        if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
+        {
+            BrowserUtil.browse(urlToProjectView);
+            return;
+        }
+
+        String workspaceId =  resolveInfisicalJsonValue("workspaceId");
+        BrowserUtil.browse(urlToProjectView  + workspaceId + "/" + URL);
     }
 
     private void loadProjects()
@@ -312,8 +310,8 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         topRow.add(linkButton);
 
         JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        bottomRow.add(buttonA);
-        bottomRow.add(buttonB);
+        bottomRow.add(accessControlButton);
+        bottomRow.add(newEnvironmentButton);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));

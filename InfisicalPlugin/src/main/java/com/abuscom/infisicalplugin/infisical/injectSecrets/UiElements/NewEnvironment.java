@@ -3,7 +3,6 @@ package com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements;
 import com.abuscom.infisicalplugin.errorMessages.ErrorNotifier;
 import com.abuscom.infisicalplugin.infisical.cache.Cache;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
-import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
@@ -15,13 +14,12 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.net.http.HttpClient;
 
-import static com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettingsEditor.redirectToInfisicalProject;
+import static com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettingsEditor.openInfisicalDashboardSpecificURL;
 
 public class NewEnvironment extends DialogWrapper {
 
-    private final JTextField txtEnviromentField = new JTextField(20);
+    private final JTextField txtEnvironmentField = new JTextField(20);
     private final Project project;
 
     public NewEnvironment(@Nullable Project project) {
@@ -35,13 +33,13 @@ public class NewEnvironment extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JLabel("Name:"), BorderLayout.WEST);
-        panel.add(txtEnviromentField, BorderLayout.CENTER);
+        panel.add(txtEnvironmentField, BorderLayout.CENTER);
         return panel;
     }
 
     @Override
     protected void doOKAction() {
-        String newEnviroment = txtEnviromentField.getText();
+        String newEnviroment = txtEnvironmentField.getText();
         if(newEnviroment == null || newEnviroment.isEmpty() || !isValidName(newEnviroment)) {
             ErrorNotifier.notify(project , "Keine gültige Eingabe!");
             return;
@@ -64,8 +62,7 @@ public class NewEnvironment extends DialogWrapper {
             }
         });
 
-        System.out.println("Enviroment is " + newEnviroment);
-        redirectToInfisicalProject();
+        openInfisicalDashboardSpecificURL("overview");
         super.doOKAction();
     }
 

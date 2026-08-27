@@ -30,6 +30,7 @@ dependencies {
         bundledPlugin("org.jetbrains.idea.maven")
         compatiblePlugin("PythonCore")
         compatiblePlugin("Pythonid")
+        compatiblePlugin("dev.nx.console")
     }
 }
 

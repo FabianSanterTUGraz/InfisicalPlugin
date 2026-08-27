@@ -24,6 +24,7 @@
     <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
     <depends optional="true" config-file="withApacheMaven.xml">org.jetbrains.idea.maven</depends>
     <depends optional="true" config-file= "withPython.xml">Pythonid</depends>
+    <depends optional="true" config-file= "withNx.xml">dev.nx.console</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="Infisical Notifications" displayType="BALLOON"/>

@@ -10,6 +10,8 @@ import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProj
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.login.LoginUser;
+import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
@@ -36,13 +38,14 @@ import static com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient.DEF
  * die "Infisical: Secrets injizieren"-Zeile in der Before-Launch-Liste oeffnet
  * (siehe {@link InjectSecretsBeforeRunTaskProviderNx#configureTask}).
  */
-public class InjectSecretsBeforeRunTaskDialogNx extends DialogWrapper {
+public class InjectSecretsBeforeRunTaskDialogNx extends DialogWrapper implements TokenChangeListener {
 
     private final Project project;
     private final String initialEnvironment;
 
     private final ComboBox<String> projectComboBox = new ComboBox<>();
     private final ComboBox<String> environmentComboBox = new ComboBox<>();
+    private final JButton loginButton = new JButton("Login");
 
     private final Map<String, String> projectNameToId = new HashMap<>();
     private volatile boolean suppressProjectSelectionEvents = false;
@@ -64,6 +67,10 @@ public class InjectSecretsBeforeRunTaskDialogNx extends DialogWrapper {
             }
         });
 
+        loginButton.addActionListener(e -> new LoginUser().login(project));
+        updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
+        TokenManager.getInstance().addTokenChangeListener(this);
+
         init();
         loadProjects(currentProject);
     }
@@ -75,7 +82,28 @@ public class InjectSecretsBeforeRunTaskDialogNx extends DialogWrapper {
         panel.add(projectComboBox);
         panel.add(new JLabel("Environment"));
         panel.add(environmentComboBox);
+        panel.add(loginButton);
         return panel;
+    }
+
+    @Override
+    public void onTokenChanged(String newToken) {
+        updateLoginButtonVisibility(newToken);
+        if (newToken != null) {
+            loadProjects(getSelectedProject());
+        }
+    }
+
+    private void updateLoginButtonVisibility(String token) {
+        loginButton.setVisible(token == null);
+        loginButton.revalidate();
+        loginButton.repaint();
+    }
+
+    @Override
+    public void dispose() {
+        TokenManager.getInstance().removeTokenChangeListener(this);
+        super.dispose();
     }
 
     private void loadProjects(@Nullable String preselect) {

@@ -43,28 +43,6 @@ public class InjectSecretsRunConfigurationsExtensionNx extends RunConfigurationE
                                      RunnerSettings runnerSettings,
                                      @NotNull GeneralCommandLine cmdLine,
                                      @NotNull String runnerId) throws ExecutionException {
-        if (!Cache.getInstance().isRunConfigInjectionEnabled()) {
-            return; //silent return (kein Before-Launch-Task aktiv/konfiguriert)
-        }
-        if (!Cache.getInstance().infisicalJsonExists(configuration.getProject())) {
-            ErrorNotifier.notify(configuration.getProject(), "No json file given in the root!");
-            return;
-        }
-        if (!TokenManager.getInstance().isTokenValid()) {
-            ErrorNotifier.notify(configuration.getProject(), "No valid jwt-Token given!(not logged in or expired)");
-            return;
-        }
-
-        try {
-            Cache.getInstance().setCache(configuration.getProject());
-        } catch (IOException | InfisicalHttpException e) {
-            ErrorNotifier.notify(configuration.getProject(), e);
-            return;
-        }
-
-        for (Map.Entry<String, String> secret : Cache.getInstance().getSecrets().entrySet()) {
-            cmdLine.getEnvironment().putIfAbsent(secret.getKey(), secret.getValue());
-        }
     }
 
     @Override

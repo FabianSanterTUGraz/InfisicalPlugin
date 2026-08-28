@@ -63,7 +63,6 @@ public class InjectIntoNpmProcess extends AbstractNodeRunConfigurationExtension 
         return new NodeRunConfigurationLaunchSession() {
             @Override
             public void addNodeOptionsTo(@NotNull NodeTargetRun targetRun) throws ExecutionException {
-
                 if(!Cache.getInstance().isRunConfigInjectionEnabled())
                 {
                     return; //silent return (wahrscheinlich keine gewünschte run config für infisical)

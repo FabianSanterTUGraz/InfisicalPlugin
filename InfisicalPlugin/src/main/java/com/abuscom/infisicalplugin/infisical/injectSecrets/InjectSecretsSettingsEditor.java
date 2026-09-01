@@ -319,6 +319,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         panel.add(bottomRow);
 
         rootPanel = panel;
+        panel.add(Box.createVerticalGlue());
         return panel;
     }
 }

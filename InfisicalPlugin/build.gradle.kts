@@ -159,4 +159,15 @@ intellijPlatformTesting {
         }
     }
 }
+        //Für nachfolger hier Sandbox eintragen und neu synchen sollte eine neue run configuration sein:
+        //einfach ein project eingeben wo man den aktuellen Stand des plugins drauflanden will.
+intellijPlatformTesting {
+    runIde {
+        register("NAME ") {
+            task {
+                args = listOf("hier/den/pfad/zur/zu/testenden/directory/eingeben")
+            }
+        }
+    }
+}
 

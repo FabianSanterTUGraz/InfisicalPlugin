@@ -12,6 +12,7 @@ import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile;
 import com.intellij.javascript.nodejs.execution.NodeTargetRun;
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension;
 import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigurationLaunchSession;
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration;
 import com.intellij.openapi.options.SettingsEditor;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
@@ -31,7 +32,6 @@ import java.util.Map;
 public class InjectIntoNpmProcess extends AbstractNodeRunConfigurationExtension {
     @Override
     public boolean isApplicableFor(@NotNull AbstractNodeTargetRunProfile configuration) {
-        // TODO: true fuer alle, oder z.B. per Cache.isRunConfigInjectionEnabled() einschraenken?
         return true;
     }
 

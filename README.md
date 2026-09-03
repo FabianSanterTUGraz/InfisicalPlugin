@@ -256,11 +256,3 @@ verifiziert: `com/jetbrains/python/run/AbstractPythonRunConfiguration.class` lie
 `intellij.python.community.impl.jar` (PythonCore), nicht in irgendeinem Pythonid-Jar. In
 `build.gradle.kts` müssen deshalb **beide** Plugins deklariert werden:
 `compatiblePlugin("PythonCore")` und `compatiblePlugin("Pythonid")`.
-
-## Secrets-sammeln
-Anbei eine Checkliste von allen Projekten wo die .env files in der infisical Cloud liegen:
-[]
-[]
-[]
-[]
-[]

@@ -206,6 +206,10 @@ public class InjectSecretsBeforeRunTaskDialogNx extends DialogWrapper implements
         return (String) projectComboBox.getSelectedItem();
     }
 
+    public String getSelectedProjectId() {
+        return projectNameToId.get(getSelectedProject());
+    }
+
     public String getSelectedEnvironment() {
         return (String) environmentComboBox.getSelectedItem();
     }

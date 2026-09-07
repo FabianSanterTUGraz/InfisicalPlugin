@@ -28,6 +28,7 @@ public class Cache {
 
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
+    private String runConfigSelectedProjectId;
 
     private final String SLUG_NAME = "specificpaths";
     public static final String INFISICAL_JSON = ".infisical.json"; //Öffentlich bekannt kein Sicherheitsrisiko
@@ -39,9 +40,16 @@ public class Cache {
         return INSTANCE;
     }
 
-    public void setRunConfigSelection(boolean enabled, String selectedEnvironment)
+    /**
+     * projectId kommt aus der pro-Run-Config gespeicherten Auswahl ({@link
+     * com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings#selectedProjectId}).
+     * Ist sie null (z.B. noch nie in dieser Run Config ausgewaehlt), faellt {@link #setCache} auf
+     * die workspaceId aus .infisical.json zurueck.
+     */
+    public void setRunConfigSelection(boolean enabled, String projectId, String selectedEnvironment)
     {
         this.runConfigInjectionEnabled = enabled;
+        this.runConfigSelectedProjectId = projectId;
         this.runConfigSelectedEnvironment = selectedEnvironment;
     }
 
@@ -59,7 +67,7 @@ public class Cache {
     public void setCache(Project project) throws IOException, InfisicalHttpException {
         config = readConfig(project,INFISICAL_JSON);
         SecretClient secretClient= new SecretClient(new InfisicalHttpClient(InfisicalHttpClient.DEFAULT_BASE_URL));
-        String projectID = config.get("workspaceId");
+        String projectID = runConfigSelectedProjectId != null ? runConfigSelectedProjectId : config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
         String newEnvironment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
         applyEnvironment(projectID, newEnvironment, token, secretClient);

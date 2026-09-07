@@ -56,6 +56,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private volatile boolean suppressProjectSelectionEvents = false;
 
     private  Map<String,String> projectNameToId = new HashMap<>();
+    //hardcoded falls sich die organisation ändern sollte hier anpassen:
     private static String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
     private String ProjectId;
 
@@ -73,7 +74,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             }
         });
 
-        projectComboBox.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXX");
+        projectComboBox.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXX"); //Für das padding im Run config selbst.
         environmentComboBox.setPrototypeDisplayValue("XXXXXXXXXXXX");
 
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
@@ -205,17 +206,20 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     }
 
     /**
-     * .infisical.json gewinnt immer, wenn der Wert in den aktuell verfuegbaren Optionen vorkommt.
-     * Nur wenn das nicht aufloesbar ist (Datei fehlt/Wert veraltet), zaehlt die zuletzt
-     * gespeicherte Auswahl dieser Run-Configuration.
+     * Die zuletzt gespeicherte Auswahl dieser Run-Configuration gewinnt immer, wenn sie in den
+     * aktuell verfuegbaren Optionen vorkommt. .infisical.json wird nur als Fallback herangezogen,
+     * solange diese Run-Configuration noch nie eine eigene Auswahl gespeichert hat (z.B. frisch
+     * angelegt) - sonst wuerde eine andere Run-Configuration, die zuletzt ein anderes Projekt in die
+     * (projektweit geteilte) .infisical.json geschrieben hat, die hier bereits getroffene Auswahl
+     * überschreiben.
      */
     private static String pickPreselection(String fromInfisicalJson, String fromRunConfig, String[] options) {
         List<String> available = Arrays.asList(options);
-        if (fromInfisicalJson != null && available.contains(fromInfisicalJson)) {
-            return fromInfisicalJson;
-        }
         if (fromRunConfig != null && available.contains(fromRunConfig)) {
             return fromRunConfig;
+        }
+        if (fromInfisicalJson != null && available.contains(fromInfisicalJson)) {
+            return fromInfisicalJson;
         }
         return null;
     }
@@ -297,6 +301,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         }
         if(projectsLoaded) {
             settings.selectedProject = (String) projectComboBox.getSelectedItem();
+            settings.selectedProjectId = projectNameToId.get(settings.selectedProject);
         }
     }
 

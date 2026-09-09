@@ -3,7 +3,6 @@ package com.abuscom.infisicalplugin.infisical.injectSecrets.springboot;
 import com.intellij.execution.ExecutionListener;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.spring.boot.run.SpringBootApplicationRunConfiguration;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +19,7 @@ public class InjectSecretsRunConfigListenerSpringBoot implements ExecutionListen
     @Override
     public void processStartScheduled(@NotNull String executorId, @NotNull ExecutionEnvironment env) {
         if (!(env.getRunProfile() instanceof RunConfigurationBase<?> config)
-                || !(config instanceof SpringBootApplicationRunConfiguration)) {
+                || !SpringBootRunConfigurationSupport.isSpringBootRunConfiguration(config)) {
             return;
         }
 

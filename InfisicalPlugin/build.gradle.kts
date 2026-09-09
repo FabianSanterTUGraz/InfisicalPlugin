@@ -53,19 +53,13 @@ intellijPlatform {
         }
     }
 
-    // com.intellij.spring.boot ist im vom Verifier bezogenen IU-Testimage nicht gebündelt
-    // (bestätigt: com.intellij.spring taucht im aufgelösten Dependency-Baum nirgends auf), obwohl
-    // es in einer echten IntelliJ-Ultimate-Installation vorhanden ist. Der Zugriff darauf ist
-    // ueber withSpringBoot.xml bereits korrekt optional gated - ohne diesen Hinweis meldet der
-    // Verifier trotzdem "No such class" fuer SpringBootApplicationRunConfiguration.
     pluginVerification {
         ides {
-                // Verifier testet gezielt nur gegen diese eine Version, statt gegen den offenen
-                // (evtl. EAP-)Bereich, der aus since-build/until-build abgeleitet würde
-                create(IntelliJPlatformType.IntellijIdeaUltimate, "2025.3.5")
-            }
-            externalPrefixes = listOf("com.intellij.spring")
+            // Verifier testet gezielt nur gegen diese eine Version, statt gegen den offenen
+            // (evtl. EAP-)Bereich, der aus since-build/until-build abgeleitet würde
+            create(IntelliJPlatformType.IntellijIdeaUltimate, "2025.3.5")
         }
+    }
 }
 
 intellijPlatformTesting {

@@ -30,7 +30,7 @@ public class Cache {
     private String runConfigSelectedEnvironment;
     private String runConfigSelectedProjectId;
 
-    private final String SLUG_NAME = "specificpaths";
+    public static final String SLUG_NAME = "specificpaths";
     public static final String INFISICAL_JSON = ".infisical.json"; //Öffentlich bekannt kein Sicherheitsrisiko
 
     private Cache(){}

@@ -17,6 +17,8 @@ public class SecretClient {
 
     private static final String SECRETS_PATH = "/api/v4/secrets";
     private static final String PROJECTS_PATH = "/api/v1/projects";
+    //hardcoded falls sich der Tag-Slug für Overrides ändern sollte hier anpassen:
+    private static final String OVERRIDE_TAG_SLUG = "specificpaths";
 
     private final InfisicalHttpClient httpClient;
     private final Gson gson = new Gson();
@@ -26,14 +28,40 @@ public class SecretClient {
 
     public SecretsAPICallResponse secrets(String projectID, String environment, String token) throws InfisicalHttpException
     {
+        return secrets(projectID, environment, token, true);
+    }
+
+    private SecretsAPICallResponse secrets(String projectID, String environment, String token, boolean includePersonalOverrides) throws InfisicalHttpException
+    {
         HttpApiResponse response = httpClient.send(
                 "GET",
                 SECRETS_PATH
-                + "?projectId=" + projectID + "&environment=" + environment + "&includePersonalOverrides=true",
+                + "?projectId=" + projectID + "&environment=" + environment + "&includePersonalOverrides=" + includePersonalOverrides,
                 Map.of("Content-Type", "application/json","Authorization","Bearer " + token),
                 null
         );
         return gson.fromJson(response.body(), SecretsAPICallResponse.class);
+    }
+
+    /**
+     * Personal-Override-Einträge in der Response von includePersonalOverrides=true tragen die
+     * Tags des zugrundeliegenden shared Secrets offenbar nicht mit (von Infisical nicht
+     * dokumentiert, aber empirisch beobachtet: ein überschriebenes Secret verschwand sonst aus
+     * dieser Liste). Deshalb wird die Tag-Zugehörigkeit über den shared-Abruf (ohne Overrides)
+     * bestimmt und der aktuelle Wert (inkl. Override) separat dazugemischt.
+     */
+    public List<SecretEntry> secretsWithTag(String projectID, String environment, String token) throws InfisicalHttpException
+    {
+        SecretsAPICallResponse sharedOnly = secrets(projectID, environment, token, false);
+        List<String> taggedKeys = sharedOnly.secrets().stream()
+                .filter(s -> s.tags() != null && s.tags().stream().anyMatch(t -> t.slug().equals(OVERRIDE_TAG_SLUG)))
+                .map(SecretEntry::secretKey)
+                .toList();
+
+        SecretsAPICallResponse withOverrides = secrets(projectID, environment, token, true);
+        return withOverrides.secrets().stream()
+                .filter(s -> taggedKeys.contains(s.secretKey()))
+                .toList();
     }
 
     public SecretsAPICallResponse fetchMetadata(String projectID, String environment, String token) throws InfisicalHttpException
@@ -105,5 +133,33 @@ public class SecretClient {
                 Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
                 body
         );
+    }
+
+    public void setOverride(String projectID, String secretName, String environment, String value, String token) throws InfisicalHttpException
+    {
+        String body = gson.toJson(Map.of(
+                "projectId", projectID,
+                "environment", environment,
+                "type", "personal",
+                "secretValue", value,
+                "secretPath", "/"
+        ));
+
+        com.abuscom.infisicalplugin.infisical.http.HttpApiResponse response = httpClient.send("PATCH", SECRETS_PATH + "/" + secretName, Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
+                body);
+    }
+
+    public void createOverride(String projectID, String secretName, String environment, String value, String token) throws InfisicalHttpException
+    {
+        String body = gson.toJson(Map.of(
+                "projectId", projectID,
+                "environment", environment,
+                "type", "personal",
+                "secretValue", value,
+                "secretPath", "/"
+        ));
+
+        com.abuscom.infisicalplugin.infisical.http.HttpApiResponse response = httpClient.send("POST", SECRETS_PATH + "/" + secretName, Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
+                body);
     }
 }

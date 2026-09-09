@@ -13,7 +13,6 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunnerSettings;
-import com.intellij.spring.boot.run.SpringBootApplicationRunConfiguration;
 
 import com.intellij.openapi.options.SettingsEditor;
 
@@ -32,7 +31,7 @@ public class InjectSecretsRunConfigurationExtensionSpringBoot extends RunConfigu
 
     @Override
     public boolean isApplicableFor(@NotNull RunConfigurationBase<?> configuration) {
-        return configuration instanceof SpringBootApplicationRunConfiguration;
+        return SpringBootRunConfigurationSupport.isSpringBootRunConfiguration(configuration);
     }
 
     @Override

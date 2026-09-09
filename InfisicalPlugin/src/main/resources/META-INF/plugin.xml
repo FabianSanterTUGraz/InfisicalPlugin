@@ -20,6 +20,7 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>org.jetbrains.plugins.terminal</depends>
+    <depends optional="true" config-file="withSpringBoot.xml">com.intellij.spring</depends>
     <depends optional="true" config-file="withJavaTooling.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
     <depends optional="true" config-file="withApacheMaven.xml">org.jetbrains.idea.maven</depends>

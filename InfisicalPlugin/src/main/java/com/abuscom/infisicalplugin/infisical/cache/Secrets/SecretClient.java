@@ -106,4 +106,19 @@ public class SecretClient {
                 body
         );
     }
+
+    public void setOverride(String projectID, String secretName, String environment, String value, String token) throws InfisicalHttpException
+    {
+        String body = gson.toJson(Map.of(
+                "projectId", projectID,
+                "environment", environment,
+                "type", "personal",
+                "secretValue", value,
+                "secretPath", "/"
+        ));
+
+        com.abuscom.infisicalplugin.infisical.http.HttpApiResponse response = httpClient.send("PATCH", SECRETS_PATH + "/" + secretName, Map.of("Content-Type", "application/json", "Authorization", "Bearer " + token),
+                body);
+        System.out.println(response.body());
+    }
 }

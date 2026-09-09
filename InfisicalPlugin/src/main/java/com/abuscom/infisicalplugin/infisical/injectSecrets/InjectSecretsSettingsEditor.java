@@ -11,6 +11,7 @@ import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewEnvironment;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.AddOverrides;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
@@ -47,6 +48,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private final JButton linkButton  = new JButton(AllIcons.General.Information);
     private final JButton accessControlButton = new JButton("Access Control");
     private final JButton newEnvironmentButton = new JButton("Neues environment erstellen");
+    private final JButton overridesButton = new JButton("Overrides");
 
     private static RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
@@ -65,6 +67,11 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         accessControlButton.addActionListener(e -> openInfisicalDashboardSpecificURL("/access-management?selectedTab=members"));
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
         newEnvironmentButton.addActionListener(e -> new NewEnvironment(configuration != null ? configuration.getProject() : null).show());
+        overridesButton.addActionListener(e -> new AddOverrides(
+                configuration != null ? configuration.getProject() : null,
+                (String) projectComboBox.getSelectedItem() != null ? projectNameToId.get(projectComboBox.getSelectedItem()) : null,
+                (String) environmentComboBox.getSelectedItem()
+        ).show());
 
         TokenManager.getInstance().addTokenChangeListener(this);
 
@@ -317,6 +324,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         bottomRow.add(accessControlButton);
         bottomRow.add(newEnvironmentButton);
+        bottomRow.add(overridesButton);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));

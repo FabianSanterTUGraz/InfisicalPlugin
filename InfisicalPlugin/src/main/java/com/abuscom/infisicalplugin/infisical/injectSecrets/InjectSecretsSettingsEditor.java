@@ -8,6 +8,7 @@ import com.abuscom.infisicalplugin.infisical.cache.Enviroments.EnvironmentEntry;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectEntry;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectsResponse;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewEnvironment;
@@ -32,6 +33,7 @@ import java.awt.event.ItemEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,11 +69,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         accessControlButton.addActionListener(e -> openInfisicalDashboardSpecificURL("/access-management?selectedTab=members"));
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
         newEnvironmentButton.addActionListener(e -> new NewEnvironment(configuration != null ? configuration.getProject() : null).show());
-        overridesButton.addActionListener(e -> new AddOverrides(
-                configuration != null ? configuration.getProject() : null,
-                (String) projectComboBox.getSelectedItem() != null ? projectNameToId.get(projectComboBox.getSelectedItem()) : null,
-                (String) environmentComboBox.getSelectedItem()
-        ).show());
+        overridesButton.addActionListener(e -> openAddOverridesDialog());
 
         TokenManager.getInstance().addTokenChangeListener(this);
 
@@ -85,6 +83,46 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         environmentComboBox.setPrototypeDisplayValue("XXXXXXXXXXXX");
 
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
+    }
+
+    private void openAddOverridesDialog() {
+        if (configuration == null) {
+            return;
+        }
+        Project currentProject = configuration.getProject();
+        String currentProjectId = (String) projectComboBox.getSelectedItem() != null
+                ? projectNameToId.get(projectComboBox.getSelectedItem())
+                : null;
+        String currentEnvironment = (String) environmentComboBox.getSelectedItem();
+
+        if (currentProjectId == null || currentEnvironment == null) {
+            ErrorNotifier.notify(currentProject, "Kein Projekt/Environment ausgewählt!");
+            return;
+        }
+        if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(currentProject, "No valid jwt-Token given!(not logged in or expired)");
+            return;
+        }
+        String token = TokenManager.getInstance().getTokenFromKeypass();
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(DEFAULT_BASE_URL);
+            SecretClient secretClient = new SecretClient(httpClient);
+            try {
+                List<SecretEntry> taggedSecrets = secretClient.secretsWithTag(currentProjectId, currentEnvironment, token);
+                Map<String, String> currentValues = new LinkedHashMap<>();
+                for (SecretEntry entry : taggedSecrets) {
+                    currentValues.put(entry.secretKey(), entry.secretValue());
+                }
+                ApplicationManager.getApplication().invokeLater(
+                        () -> new AddOverrides(currentProject, currentProjectId, currentEnvironment, currentValues).show(),
+                        ModalityState.any());
+            } catch (InfisicalHttpException e) {
+                ApplicationManager.getApplication().invokeLater(
+                        () -> ErrorNotifier.notify(currentProject, e),
+                        ModalityState.any());
+            }
+        });
     }
 
     @Override

@@ -52,13 +52,13 @@ public class InjectSecretsBeforeRunTaskProviderNx extends BeforeRunTaskProvider<
                                            @NotNull RunConfiguration configuration,
                                            @NotNull InjectSecretsBeforeRunTaskNx task) {
         InjectSecretsBeforeRunTaskDialogNx dialog = new InjectSecretsBeforeRunTaskDialogNx(
-                configuration.getProject(), task.project, task.environment);
+                configuration.getProject(), task.getProject(), task.getEnvironment());
 
         boolean confirmed = dialog.showAndGet();
         if (confirmed) {
-            task.project = dialog.getSelectedProject();
-            task.projectId = dialog.getSelectedProjectId();
-            task.environment = dialog.getSelectedEnvironment();
+            task.setProject(dialog.getSelectedProject());
+            task.setProjectId(dialog.getSelectedProjectId());
+            task.setEnvironment(dialog.getSelectedEnvironment());
         }
         return Promises.resolvedPromise(confirmed);
     }
@@ -73,7 +73,7 @@ public class InjectSecretsBeforeRunTaskProviderNx extends BeforeRunTaskProvider<
     @Override
     public boolean executeTask(@NotNull DataContext context, @NotNull RunConfiguration configuration,
                                 @NotNull ExecutionEnvironment env, @NotNull InjectSecretsBeforeRunTaskNx task) {
-        Cache.getInstance().setRunConfigSelection(true, task.projectId, task.environment);
+        Cache.getInstance().setRunConfigSelection(true, task.getProjectId(), task.getEnvironment());
         NxCommandConfiguration config = (NxCommandConfiguration) configuration;
         NxRunSettings currentSettings = config.getNxRunSettings();
 

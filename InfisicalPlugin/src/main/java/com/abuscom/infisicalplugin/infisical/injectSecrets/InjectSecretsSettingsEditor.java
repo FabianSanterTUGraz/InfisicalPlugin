@@ -62,8 +62,10 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     private volatile boolean suppressProjectSelectionEvents = false;
 
     private  Map<String,String> projectNameToId = new HashMap<>();
-    //hardcoded falls sich die organisation ändern sollte hier anpassen:
-    private static String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
+    // Kein hardcoded Organizations-Präfix: die Marketplace-Version wird von Usern mit
+    // unterschiedlichen Infisical-Organisationen genutzt, die App löst die Organisation
+    // serverseitig über die Projekt-/Workspace-ID auf.
+    private static String urlToProjectView = DEFAULT_BASE_URL + "/projects/secret-management/";
     private String ProjectId;
 
     public InjectSecretsSettingsEditor(){

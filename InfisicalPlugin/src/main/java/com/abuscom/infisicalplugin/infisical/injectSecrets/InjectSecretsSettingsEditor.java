@@ -9,6 +9,8 @@ import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProj
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectsResponse;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretsAPICallResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListRequest;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewEnvironment;
@@ -108,7 +110,16 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             InfisicalHttpClient httpClient = new InfisicalHttpClient(DEFAULT_BASE_URL);
             SecretClient secretClient = new SecretClient(httpClient);
+
             try {
+                SecretsAPICallResponse all = secretClient.secrets(currentProjectId, currentEnvironment, token);
+                TagListRequest tag = Cache.resolveMachineSpecificTag(currentProjectId, token, secretClient);
+                for (SecretEntry entry : all.secrets()) {
+                    if (Cache.looksLikeUserSpecificPath(entry.secretValue())) {
+                        Cache.tagUserSpecificPath(entry, secretClient, currentProjectId, currentEnvironment, token, tag);
+                    }
+                }
+
                 List<SecretEntry> taggedSecrets = secretClient.secretsWithTag(currentProjectId, currentEnvironment, token);
                 Map<String, String> currentValues = new LinkedHashMap<>();
                 for (SecretEntry entry : taggedSecrets) {

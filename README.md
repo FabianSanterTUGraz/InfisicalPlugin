@@ -28,7 +28,7 @@
    ![Alt-Text](docs/ExampleScreenshots/woInstallieren.png)
 2. Über `+` folgende URL eintragen (einmalig):
 
-   https://gitlab.abuscom.cloud/api/v4/projects/269/packages/generic/infisical-plugin/repository/updatePlugins.xml
+   https://github.com/FabianSanterTUGraz/InfisicalPlugin/releases/latest/download/updatePlugins.xml
 
    ![Alt-Text](docs/ExampleScreenshots/custompluginrepositories.png)
 

@@ -7,6 +7,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import java.awt.Component;
+import java.awt.Container;
 
 /**
  * Covers the "expired token forces a fresh login" path end-to-end:
@@ -65,11 +66,27 @@ public class InjectSecretsSettingsEditorLoginButtonTest extends BasePlatformTest
 
     private static JButton findLoginButton(InjectSecretsSettingsEditor editor) {
         JComponent panel = editor.createEditor();
-        for (Component component : panel.getComponents()) {
-            if (component instanceof JButton button) {
+        JButton loginButton = findButtonByText(panel, "Login");
+        if (loginButton == null) {
+            throw new IllegalStateException("No JButton found in InjectSecretsSettingsEditor's panel");
+        }
+        return loginButton;
+    }
+
+    // Der Login-Button steckt seit der topRow/bottomRow-Aufteilung in createEditor() in einem
+    // verschachtelten Panel, nicht mehr direkt im zurückgegebenen Root-Panel - daher rekursiv suchen.
+    private static JButton findButtonByText(Container container, String text) {
+        for (Component component : container.getComponents()) {
+            if (component instanceof JButton button && text.equals(button.getText())) {
                 return button;
             }
+            if (component instanceof Container childContainer) {
+                JButton found = findButtonByText(childContainer, text);
+                if (found != null) {
+                    return found;
+                }
+            }
         }
-        throw new IllegalStateException("No JButton found in InjectSecretsSettingsEditor's panel");
+        return null;
     }
 }

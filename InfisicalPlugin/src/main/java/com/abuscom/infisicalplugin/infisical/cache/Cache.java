@@ -78,28 +78,28 @@ public class Cache {
         environment = newEnvironment;
         secrets.clear();
 
-        TagListRequest tag = resolveMachineSpecificTag(projectID, token, secretClient);
-
         SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
 
         for (SecretEntry entry : response.secrets()) {
-            boolean alreadyTagged = entry.tags() != null
-                    && entry.tags().stream().anyMatch(t -> t.slug().equals(SLUG_NAME));
-
-            if(tag != null && !alreadyTagged && looksLikeUserSpecificPath(entry.secretValue()))
-            {
-                try {
-                    secretClient.tagVariable(projectID,entry.secretKey(),environment,token,tag.id());
-                } catch (InfisicalHttpException e) {
-                    LOG.warn("Konnte Secret '" + entry.secretKey() + "' nicht mit '" + SLUG_NAME + "' taggen", e);
-                }
-            }
-
             secrets.put(entry.secretKey(), entry.secretValue());
         }
     }
 
-    private TagListRequest resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
+    public static void tagUserSpecificPath(SecretEntry entry, SecretClient secretClient, String projectID, String environment, String token, TagListRequest tag) {
+        boolean alreadyTagged = entry.tags() != null
+                && entry.tags().stream().anyMatch(t -> t.slug().equals(SLUG_NAME));
+
+        if(tag != null && !alreadyTagged)
+        {
+            try {
+                secretClient.tagVariable(projectID,entry.secretKey(),environment,token, tag.id());
+            } catch (InfisicalHttpException e) {
+                LOG.warn("Konnte Secret '" + entry.secretKey() + "' nicht mit '" + SLUG_NAME + "' taggen", e);
+            }
+        }
+    }
+
+    public static TagListRequest resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
         try {
             Optional<TagListRequest> existingTag = secretClient.findTagBySlug(projectID, SLUG_NAME, token);
             return existingTag.isPresent() ? existingTag.get() : secretClient.createTag(projectID, SLUG_NAME, "RED", token);

@@ -25,7 +25,7 @@ public class InjectSecretsRunConfigListenerMaven implements ExecutionListener  {
             return;
         }
 
-        Cache.getInstance().setRunConfigSelection(true, settings.selectedEnvironment);
+        Cache.getInstance().setRunConfigSelection(true, settings.selectedProjectId, settings.selectedEnvironment);
         try {
             Cache.getInstance().setCache(config.getProject());
         } catch (IOException | InfisicalHttpException e) {

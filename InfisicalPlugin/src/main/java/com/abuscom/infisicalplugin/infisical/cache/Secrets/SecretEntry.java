@@ -4,5 +4,5 @@ import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListReques
 
 import java.util.List;
 
-public record SecretEntry(String secretKey, String secretValue, int version, String id, List<TagListRequest> tags) {
+public record SecretEntry(String secretKey, String secretValue, int version, String id, String type,List<TagListRequest> tags) {
 }

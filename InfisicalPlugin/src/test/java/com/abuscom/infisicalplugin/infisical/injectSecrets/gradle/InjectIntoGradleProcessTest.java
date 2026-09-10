@@ -32,7 +32,7 @@ public class InjectIntoGradleProcessTest extends BasePlatformTestCase {
     protected void tearDown() throws Exception {
         try {
             TokenManager.getInstance().clearKeypass();
-            Cache.getInstance().setRunConfigSelection(false, null);
+            Cache.getInstance().setRunConfigSelection(false, null, null);
         } finally {
             super.tearDown();
         }
@@ -40,7 +40,7 @@ public class InjectIntoGradleProcessTest extends BasePlatformTestCase {
 
     public void testConfigureSettings_invalidToken_addsNoEnvironmentVariables() {
         TokenManager.getInstance().clearKeypass();
-        Cache.getInstance().setRunConfigSelection(true, "dev");
+        Cache.getInstance().setRunConfigSelection(true, null, "dev");
 
         GradleExecutionSettings settings = new GradleExecutionSettings();
         process.configureSettings(settings, new TestGradleExecutionContext(getProject(), settings));
@@ -50,7 +50,7 @@ public class InjectIntoGradleProcessTest extends BasePlatformTestCase {
 
     public void testConfigureSettings_injectionDisabled_addsNoEnvironmentVariables() {
         TokenManager.getInstance().setTokenInKeypass(InjectSecretsRunConfigurationExtensionTest.fakeJwt(3600));
-        Cache.getInstance().setRunConfigSelection(false, "dev");
+        Cache.getInstance().setRunConfigSelection(false, null, "dev");
 
         GradleExecutionSettings settings = new GradleExecutionSettings();
         process.configureSettings(settings, new TestGradleExecutionContext(getProject(), settings));

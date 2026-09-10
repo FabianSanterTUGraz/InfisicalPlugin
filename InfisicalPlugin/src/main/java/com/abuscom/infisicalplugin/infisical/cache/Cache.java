@@ -22,12 +22,16 @@ public class Cache {
     private static final Logger LOG = Logger.getInstance(Cache.class);
     private static final Cache INSTANCE = new Cache();
     private final Map<String,String> secrets = new HashMap<>();
+
     private Map<String,String> config;
     private String environment = "";
+
     private boolean runConfigInjectionEnabled = false;
     private String runConfigSelectedEnvironment;
-    private final String SLUG_NAME = "specificpaths";
-    private final String INFISICAL_JSON = ".infisical.json";
+    private String runConfigSelectedProjectId;
+
+    public static final String SLUG_NAME = "specificpaths";
+    public static final String INFISICAL_JSON = ".infisical.json"; //Öffentlich bekannt kein Sicherheitsrisiko
 
     private Cache(){}
 
@@ -36,9 +40,16 @@ public class Cache {
         return INSTANCE;
     }
 
-    public void setRunConfigSelection(boolean enabled, String selectedEnvironment)
+    /**
+     * projectId kommt aus der pro-Run-Config gespeicherten Auswahl ({@link
+     * com.abuscom.infisicalplugin.infisical.injectSecrets.InjectSecretsSettings#selectedProjectId}).
+     * Ist sie null (z.B. noch nie in dieser Run Config ausgewaehlt), faellt {@link #setCache} auf
+     * die workspaceId aus .infisical.json zurueck.
+     */
+    public void setRunConfigSelection(boolean enabled, String projectId, String selectedEnvironment)
     {
         this.runConfigInjectionEnabled = enabled;
+        this.runConfigSelectedProjectId = projectId;
         this.runConfigSelectedEnvironment = selectedEnvironment;
     }
 
@@ -56,7 +67,7 @@ public class Cache {
     public void setCache(Project project) throws IOException, InfisicalHttpException {
         config = readConfig(project,INFISICAL_JSON);
         SecretClient secretClient= new SecretClient(new InfisicalHttpClient(resolveBaseUrl()));
-        String projectID = config.get("workspaceId");
+        String projectID = runConfigSelectedProjectId != null ? runConfigSelectedProjectId : config.get("workspaceId");
         String token = TokenManager.getInstance().getTokenFromKeypass();
         String newEnvironment = runConfigSelectedEnvironment != null ? runConfigSelectedEnvironment : config.get("defaultEnvironment");
         applyEnvironment(projectID, newEnvironment, token, secretClient);
@@ -67,28 +78,28 @@ public class Cache {
         environment = newEnvironment;
         secrets.clear();
 
-        TagListRequest tag = resolveMachineSpecificTag(projectID, token, secretClient);
-
         SecretsAPICallResponse response = secretClient.secrets(projectID, newEnvironment, token);
 
         for (SecretEntry entry : response.secrets()) {
-            boolean alreadyTagged = entry.tags() != null
-                    && entry.tags().stream().anyMatch(t -> t.slug().equals(SLUG_NAME));
-
-            if(tag != null && !alreadyTagged && looksLikeUserSpecificPath(entry.secretValue()))
-            {
-                try {
-                    secretClient.tagVariable(projectID,entry.secretKey(),environment,token,tag.id());
-                } catch (InfisicalHttpException e) {
-                    LOG.warn("Konnte Secret '" + entry.secretKey() + "' nicht mit '" + SLUG_NAME + "' taggen", e);
-                }
-            }
-
             secrets.put(entry.secretKey(), entry.secretValue());
         }
     }
 
-    private TagListRequest resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
+    public static void tagUserSpecificPath(SecretEntry entry, SecretClient secretClient, String projectID, String environment, String token, TagListRequest tag) {
+        boolean alreadyTagged = entry.tags() != null
+                && entry.tags().stream().anyMatch(t -> t.slug().equals(SLUG_NAME));
+
+        if(tag != null && !alreadyTagged)
+        {
+            try {
+                secretClient.tagVariable(projectID,entry.secretKey(),environment,token, tag.id());
+            } catch (InfisicalHttpException e) {
+                LOG.warn("Konnte Secret '" + entry.secretKey() + "' nicht mit '" + SLUG_NAME + "' taggen", e);
+            }
+        }
+    }
+
+    public static TagListRequest resolveMachineSpecificTag(String projectID, String token, SecretClient secretClient) {
         try {
             Optional<TagListRequest> existingTag = secretClient.findTagBySlug(projectID, SLUG_NAME, token);
             return existingTag.isPresent() ? existingTag.get() : secretClient.createTag(projectID, SLUG_NAME, "RED", token);

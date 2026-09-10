@@ -18,10 +18,12 @@ public class InjectSecretsSettings {
     private static final String ATTR_ENABLED = "enabled";
     private static final String ATTR_ENVIRONMENT = "environment";
     private static final String ATTR_PROJECT = "project";
+    private static final String ATTR_PROJECT_ID = "projectId";
 
     public boolean enabled = false;
     public String selectedEnvironment = null;
     public String selectedProject = null;
+    public String selectedProjectId = null;
 
     public static InjectSecretsSettings getOrCreate(@NotNull RunConfigurationBase<?> config) {
         InjectSecretsSettings settings = config.getCopyableUserData(KEY);
@@ -47,6 +49,9 @@ public class InjectSecretsSettings {
         settings.selectedProject = child != null
                 ? child.getAttributeValue(ATTR_PROJECT, (String) null)
                 : null;
+        settings.selectedProjectId = child != null
+                ? child.getAttributeValue(ATTR_PROJECT_ID, (String) null)
+                : null;
     }
 
     public static void writeExternal(@NotNull RunConfigurationBase<?> configuration, @NotNull Element element) {
@@ -58,6 +63,9 @@ public class InjectSecretsSettings {
         }
         if (settings.selectedProject != null) {
             child.setAttribute(ATTR_PROJECT, settings.selectedProject);
+        }
+        if (settings.selectedProjectId != null) {
+            child.setAttribute(ATTR_PROJECT_ID, settings.selectedProjectId);
         }
         element.addContent(child);
     }

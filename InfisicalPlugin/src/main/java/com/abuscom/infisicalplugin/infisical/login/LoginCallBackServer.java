@@ -31,13 +31,6 @@ public class LoginCallBackServer {
         server.start();
     }
 
-    public void stopServer()
-    {
-        if(server != null) {
-            server.stop(0);
-        }
-    }
-
     public void handle(HttpExchange exchange) throws IOException {
         try {
             if ("OPTIONS".equals(exchange.getRequestMethod())) {
@@ -61,6 +54,7 @@ public class LoginCallBackServer {
 
             String successMessage = "Login Successful! You can close this window.";
             exchange.getResponseHeaders().set("Content-Type", "text/plain");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
             exchange.sendResponseHeaders(200, successMessage.getBytes().length);
             exchange.getResponseBody().write(successMessage.getBytes());
             server.stop(0);

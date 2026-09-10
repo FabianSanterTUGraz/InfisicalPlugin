@@ -8,12 +8,15 @@ darauf verweist.
 ## TL;DR
 
 IntelliJ-Platform-Plugin (Java/Gradle), das Infisical-Secrets in die IDE holt und automatisch als
-Umgebungsvariablen in Run-Configurations injiziert (aktuell: Gradle-, Spring-Boot- und npm/Node-Runs).
+Umgebungsvariablen in Run-Configurations injiziert (aktuell: Gradle-, Spring-Boot-, npm/Node-,
+Maven-, Python- und Nx-Console-Runs).
 Login läuft über einen Browser-Flow gegen eine selbstgehostete Infisical-Instanz, das JWT liegt im
 IntelliJ PasswordSafe. Secrets werden pro Environment gecacht und nur bei Environment- oder
 Versionswechsel neu abgerufen. Die eigentliche Schwierigkeit im Projekt: IntelliJ hat **pro
 Sprache/Run-Runner unterschiedliche, undokumentierte Mechanismen**, um Env-Variablen tatsächlich
-in den gestarteten Prozess zu bekommen — siehe Abschnitt "Neue Sprache hinzufügen".
+in den gestarteten Prozess zu bekommen — siehe Abschnitt "Neue Sprache hinzufügen". Nx Console ist
+dabei der ungewöhnlichste Fall: kein `RunConfigurationExtension`/"Modify options"-Zugriff möglich,
+Injection läuft über einen `BeforeRunTaskProvider` samt eigenem Auswahl-Dialog.
 
 ## Repo-Struktur
 
@@ -151,9 +154,16 @@ davon ab, *wie* der jeweilige Run-Config-Typ seinen Prozess überhaupt startet:
 | Java / Spring Boot | `com.intellij.runConfigurationExtension` (generisch, SDK) | `updateJavaParameters(...)` → `javaParameters.getEnv().putAll(...)` | `InjectSecretsRunConfigurationExtension` |
 | Gradle | `org.jetbrains.plugins.gradle.executionHelperExtension` | `configureSettings(GradleExecutionSettings, GradleExecutionContext)` → `settings.addEnvironmentVariable(...)` | `InjectIntoGradleProcess` |
 | npm / Node.js | `JavaScript.nodeRunConfigurationExtension` | `createLaunchSession(...)` → `NodeTargetRun.setEnvData(EnvironmentVariablesData...)` (Targets API) | `InjectIntoNpmProcess` |
+| Maven | Seit IDE 2025.2 default `MavenShCommandLineState` (Shell-Script statt Java-Prozess), ruft **keinen** `RunConfigurationExtension`-Hook auf (bytecode-verifiziert) | `ExecutionListener.processStartScheduled` → `MavenRunnerSettings.setEnvironmentProperties(...)` | `InjectSecretsRunConfigListenerMaven` |
+| Python | `Pythonid.runConfigurationExtension` existiert, `patchCommandLine` feuert aber laut Community-Berichten nicht zuverlässig | `ExecutionListener.processStartScheduled` → `config.setEnvs(...)` (per `putIfAbsent`) | `InjectSecretsRunConfigListenerPython` |
+| Nx Console | **Kein** Modify-Options-Zugriff möglich (`dev.nx.console` bindet den generischen Mechanismus nicht ein) | `BeforeRunTaskProvider` ("Infisical: Secrets injizieren") + eigener Auswahl-Dialog, Cleanup via `ExecutionListener.processStarted` | `InjectSecretsBeforeRunTaskProviderNx`, `InjectSecretsRunConfigListenerNx` |
 
-**Warum drei verschiedene Mechanismen?** Siehe die ausführliche Erkenntnis
-`InfisicalPlugin/erkenntnisse/2026-07-17-secrets-in-echten-gradle-prozess-injizieren.md` — Kurzfassung:
+**Warum so viele verschiedene Mechanismen?** Siehe die ausführliche Erkenntnis
+`InfisicalPlugin/erkenntnisse/2026-07-17-secrets-in-echten-gradle-prozess-injizieren.md` (am
+Beispiel Gradle) sowie [SYSTEM_ARCHITEKTUR.md, Abschnitt 8](../SYSTEM_ARCHITEKTUR.md) für die
+vollständige Fall-A-bis-E-Übersicht (inkl. Maven-Sonderfall "sieht aus wie Java, ist es aber
+versionsabhängig nicht" und Nx-Sonderfall "kein Modify-Options-Tab, braucht BeforeRunTask").
+Kurzfassung für die ersten drei Typen:
 
 - `RunConfigurationExtension.patchCommandLine(...)` (der naheliegende generische SDK-Hook) patcht
   eine `GeneralCommandLine` — funktioniert nur, wenn der Run-Config-Typ seinen Prozess wirklich
@@ -187,16 +197,25 @@ eigener Config-Datei, damit das Plugin auch in IDEs ohne die jeweilige Sprachunt
 ```xml
 <depends optional="true" config-file="withJavaTooling.xml">com.intellij.modules.java</depends>
 <depends optional="true" config-file="withJavascript.xml">NodeJS</depends>
+<depends optional="true" config-file="withApacheMaven.xml">org.jetbrains.idea.maven</depends>
+<depends optional="true" config-file="withPython.xml">Pythonid</depends>
+<depends optional="true" config-file="withNx.xml">dev.nx.console</depends>
 ```
 
 `withJavaTooling.xml` bündelt Java/Gradle/Spring-Boot-Extensions (inkl. eigener
 `<depends>com.intellij.gradle</depends>`/`<depends>com.intellij.spring.boot</depends>` — diese
 inneren `<depends>` sind **nicht** optional, d.h. `withJavaTooling.xml` wird nur wirksam geladen,
 wenn Gradle- und Spring-Boot-Plugin ebenfalls vorhanden sind). `withJavascript.xml` bündelt die
-Node-Extension. Für Compile-Zeit-Zugriff auf die jeweiligen Plugin-APIs müssen zusätzlich in
-`build.gradle.kts` im `intellijPlatform { }`-Block die passenden `bundledPlugin(...)`-Einträge
+Node-Extension, `withApacheMaven.xml` die Maven-Extension, `withPython.xml` die Python-Extension
+(Basisklasse `AbstractPythonRunConfiguration` steckt im Basis-Plugin **PythonCore**, nicht in
+Pythonid selbst — deshalb müssen in `build.gradle.kts` beide, `compatiblePlugin("PythonCore")` und
+`compatiblePlugin("Pythonid")`, deklariert werden). `withNx.xml` bündelt die Nx-Extension
+(`RunConfigurationExtension` + `stepsBeforeRunProvider` + `ExecutionListener`, siehe Tabelle oben).
+Für Compile-Zeit-Zugriff auf die jeweiligen Plugin-APIs müssen zusätzlich in `build.gradle.kts` im
+`intellijPlatform { }`-Block die passenden `bundledPlugin(...)`/`compatiblePlugin(...)`-Einträge
 stehen (aktuell: `com.intellij.modules.json`, `com.intellij.java`, `com.intellij.gradle`,
-`org.jetbrains.plugins.terminal`, `JavaScript`, `com.intellij.spring.boot`).
+`org.jetbrains.plugins.terminal`, `JavaScript`, `com.intellij.spring.boot`,
+`org.jetbrains.idea.maven`, `PythonCore`, `Pythonid`, `dev.nx.console`).
 
 ## Neue Sprache hinzufügen (z.B. PHP, Python, Go, Ruby, .NET)
 
@@ -300,6 +319,14 @@ diesen Stellen angelegt oder die Pfade angepasst werden.
 - `CHANGELOG.md` für das erste Release noch nicht befüllt (#21), Release-Tag noch nicht gesetzt (#23).
 - `UniversalAuthClient`/Machine-Identity-Auth ist totes Code (nicht verdrahtet) — vor Ausbau
   klären, ob das noch gebraucht wird oder entfernt werden kann.
+- Für Maven- und Python-Run-Configs werden Checkbox-/Environment-Auswahl aktuell **nicht** über
+  IDE-Neustarts hinweg persistiert (`readExternal`/`writeExternal` fehlen bzw. werden nicht
+  genutzt) — anders als bei Gradle/Spring Boot/npm.
+- Nx Console (`dev.nx.console`) ist am wenigsten abgesichert: `InjectSecretsRunConfigurationsExtensionNx`
+  (leere `patchCommandLine`/`updateJavaParameters`) ist eine unverifizierte Hypothese, die
+  eigentliche Injection läuft über einen `BeforeRunTaskProvider` mit eigenem Dialog statt über
+  "Modify options", und es existieren **keine automatisierten Tests** für diesen Pfad. Details und
+  offene Fragen dazu in [SYSTEM_ARCHITEKTUR.md](../SYSTEM_ARCHITEKTUR.md#offene-fragen).
 
 ## Wo finde ich was — Schnellreferenz
 
@@ -312,8 +339,11 @@ diesen Stellen angelegt oder die Pfade angepasst werden.
 | Wie kommen Secrets in einen Gradle-Run? | `infisical/injectSecrets/InjectIntoGradleProcess.java` + Erkenntnis `2026-07-17-...` |
 | Wie kommen Secrets in einen npm-Run? | `infisical/injectSecrets/InjectIntoNpmProcess.java` |
 | Wie kommen Secrets in einen Java/SpringBoot-Run? | `infisical/injectSecrets/InjectSecretsRunConfigurationExtension.java` |
+| Wie kommen Secrets in einen Maven-Run? | `infisical/injectSecrets/apacheMaven/InjectSecretsRunConfigListenerMaven.java` |
+| Wie kommen Secrets in einen Python-Run? | `infisical/injectSecrets/python/InjectSecretsRunConfigListenerPython.java` |
+| Wie kommen Secrets in einen Nx-Console-Run? | `infisical/injectSecrets/nx/InjectSecretsBeforeRunTaskProviderNx.java` + `InjectSecretsRunConfigListenerNx.java` |
 | Wo werden Fehler angezeigt? | `errorMessages/ErrorNotifier.java` |
-| Welche optionalen Plugin-Dependencies gibt es? | `plugin.xml`, `withJavaTooling.xml`, `withJavascript.xml` |
+| Welche optionalen Plugin-Dependencies gibt es? | `plugin.xml`, `withJavaTooling.xml`, `withJavascript.xml`, `withApacheMaven.xml`, `withPython.xml`, `withNx.xml` |
 | Was ist offen? | `docs/todos.md` |
 
 ## Verwandte Erkenntnisse

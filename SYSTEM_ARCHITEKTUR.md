@@ -20,7 +20,7 @@ flowchart LR
     Browser["System-Browser"]
     Infisical["Infisical-Server<br/>infisical.internal.abuscom.cloud"]
     KeyStore["OS-Keychain<br/>(IntelliJ PasswordSafe)"]
-    Process["Gestarteter Prozess<br/>(Gradle-Daemon / Node / Java-Prozess / Maven)"]
+    Process["Gestarteter Prozess<br/>(Gradle-Daemon / Node / Java-Prozess / Maven / Python / Nx)"]
 
     UI -- "Login-Klick" --> Browser
     Browser -- "Login-Formular" --> Infisical
@@ -40,7 +40,7 @@ flowchart LR
 | **HTTP-Client** | Generischer REST-Client gegen die Infisical-API | `InfisicalHttpClient` |
 | **Secrets-Zugriff** | Secrets/Environments von Infisical abrufen, machine-spezifische Secrets automatisch taggen | `SecretClient`, `CurrentEnviroments` |
 | **Cache** | Secrets pro Environment zwischenspeichern, Invalidierung, lokale Overrides | `Cache` |
-| **Injection** | Secrets als Env-Variablen in den jeweiligen Run-Prozess einschleusen | `InjectIntoGradleProcess`, `InjectIntoNpmProcess`, `InjectSecretsRunConfigurationExtension`, `InjectSecretsRunConfigListenerMaven` |
+| **Injection** | Secrets als Env-Variablen in den jeweiligen Run-Prozess einschleusen | `InjectIntoGradleProcess`, `InjectIntoNpmProcess`, `InjectSecretsRunConfigurationExtension`, `InjectSecretsRunConfigListenerMaven`, `InjectSecretsRunConfigurationsExtensionPython`, `InjectSecretsRunConfigListenerPython`, `InjectSecretsBeforeRunTaskProviderNx`, `InjectSecretsRunConfigListenerNx` |
 | **UI** | Checkbox + Environment-Auswahl in der Run-Config, Login-Button | `InjectSecretsSettingsEditor`, `InjectSecretsSettings` |
 | **Fehlerbehandlung** | Zentrale Notification-Erzeugung, Auth-Fehler erkennen | `ErrorNotifier` |
 
@@ -149,13 +149,20 @@ nicht.
 | Gradle | Über die Gradle Tooling API (kein echter `GeneralCommandLine`) | `GradleExecutionHelperExtension.configureSettings(...)` |
 | npm / Node.js | Über die neuere "Targets API" | `JavaScript.nodeRunConfigurationExtension` → `NodeTargetRun.setEnvData(...)` |
 | Maven | Seit IDE 2025.2 default per generiertem Shell-/Batch-Script (`MavenShCommandLineState`), das **keinen** `RunConfigurationExtension`-Hook aufruft (bytecode-verifiziert gegen 2025.3.5) | `ExecutionListener.processStartScheduled` → `MavenRunnerSettings.setEnvironmentProperties(...)` |
+| Python | Direkter Java-Prozess, aber kein `JavaParameters`-Objekt und `patchCommandLine(...)` wird laut Community-Berichten für Python-Configs nicht zuverlässig aufgerufen | `ExecutionListener.processStartScheduled` → `config.setEnvs(...)` (per `putIfAbsent` gemergt) |
+| Nx Console | Drittanbieter-Plugin (`dev.nx.console`), bindet den generischen "Modify options"-Mechanismus gar nicht ein — `patchCommandLine`/`updateJavaParameters` bleiben unbenutzte Stubs | `BeforeRunTaskProvider` ("Infisical: Secrets injizieren") → `NxRunSettings.setEnvironmentVariables(...)`, danach Cleanup via `ExecutionListener.processStarted` |
 
 Der naheliegende generische SDK-Weg (`patchCommandLine`) greift **nur bei Java-artigen
 Prozessen** — Gradle und Node.js starten ihre Prozesse anders und brauchen deshalb ihren eigenen,
 sprachspezifischen Extension Point. Maven ist der Sonderfall: Es *sieht* aus wie der Java-Fall
 (baut historisch ein `JavaParameters`-Objekt), verhält sich aber je nach IDE-Version und internem
 Registry-Flag (`maven.use.scripts`) komplett anders — Details dazu in
-[README.md](README.md#maven-mavenrunconfiguration).
+[README.md](README.md#maven-mavenrunconfiguration). Python sieht ebenfalls wie der Java-Fall aus,
+`patchCommandLine` feuert dort aber in der Praxis nicht zuverlässig, weshalb — wie bei Maven — auf
+einen `ExecutionListener` ausgewichen wird. Nx Console ist der bisher ungewöhnlichste Fall: Es gibt
+dort **gar keine** Modify-Options-Integration, die Injection läuft komplett über einen
+Before-Launch-Task statt über einen `RunConfigurationExtension`-Callback — Details dazu in
+[README.md](README.md#nx-console-nxcommandconfiguration).
 
 ## 8. Neue Sprache unterstützen — Schritt für Schritt
 
@@ -195,6 +202,19 @@ flowchart TD
   (`processStartScheduled`), der die konkrete RunConfiguration direkt mutiert — nur zulässig, wenn
   deren internes Settings-Objekt live (nicht kopiert) von der tatsächlichen
   Prozess-Aufbau-Logik gelesen wird; auch das per Bytecode verifizieren, nicht annehmen.
+- **Fall E (wie Nx Console, seltener):** Das Ziel-Plugin bindet den generischen
+  "Modify options"-Mechanismus für `RunConfigurationExtension` überhaupt nicht ein — es gibt also
+  keinen Tab, über den Checkbox/Dropdown angezeigt werden könnten, egal was `isApplicableFor(...)`
+  zurückgibt. In diesem Fall bleibt nur ein **`BeforeRunTaskProvider`**
+  (`com.intellij.stepsBeforeRunProvider`): Er registriert einen eigenen Eintrag in der
+  "Before launch"-Liste der Run-Configuration, über dessen Doppelklick sich (mangels
+  Modify-Options-Tab) ein eigener `DialogWrapper` für Projekt-/Environment-Auswahl öffnen lässt.
+  Die eigentliche Injection läuft dann in `executeTask(...)` dieses Providers, nicht in
+  `patchCommandLine`. Wichtig: Ist das Env-Variablen-Objekt der Ziel-Run-Config (wie
+  `NxRunSettings`) Teil der persistierbaren Run-Config-Instanz, muss zusätzlich ein
+  `ExecutionListener.processStarted`-Hook die injizierten Keys nach dem Start wieder entfernen,
+  damit sie nicht in die Run-Config-XML geschrieben werden, falls die Konfiguration danach
+  gespeichert wird (siehe [README.md](README.md#nx-console-nxcommandconfiguration)).
 
 ### Schritt 2 — Konkrete Umsetzung für Fall A (Standardfall)
 
@@ -244,7 +264,28 @@ ist ausführlich dokumentiert in:
   (`InjectSecretsRunConfigurationsExtensionMaven` implementiert `readExternal`/`writeExternal`
   noch nicht) — anders als bei Gradle/Spring Boot/npm geht die Auswahl bei einem IDE-Neustart
   verloren.
+- `InjectSecretsRunConfigurationsExtensionNx` registriert `isApplicableFor`/`createEditor` für den
+  generischen "Modify options"-Mechanismus, aber laut Code-Kommentar öffnet `NxCommandConfiguration`
+  diesen Tab in der Praxis nicht — `patchCommandLine`/`updateJavaParameters` bleiben leer. Ob diese
+  Klasse damit vollständig totes Gerüst ist oder in manchen Nx-Console-Versionen doch greift, ist
+  unverifiziert (siehe README, Abschnitt "Nx Console").
+- Für die Nx-Injection existieren **keine automatisierten Tests** (anders als bei Gradle/npm) —
+  das Verhalten von `InjectSecretsBeforeRunTaskProviderNx`/`InjectSecretsRunConfigListenerNx` ist
+  ausschließlich per Code-Review nachvollzogen, nicht durch Unit-Tests oder einen dokumentierten
+  Sandbox-Rauchtest abgesichert.
 
 ## Offene Fragen
+
+- Ist `InjectSecretsRunConfigurationsExtensionNx` (leere `patchCommandLine`/`updateJavaParameters`)
+  totes Gerüst, oder wird sie unter bestimmten Nx-Console-Versionen/-Konfigurationen doch
+  aufgerufen? Ließe sich nur durch einen gezielten Sandbox-Test mit Logging in beiden Methoden
+  klären.
+- Persistiert die Projekt-/Environment-Auswahl aus `InjectSecretsBeforeRunTaskDialogNx`
+  (`InjectSecretsBeforeRunTaskNx.readExternal`/`writeExternal`) zuverlässig über IDE-Neustarts
+  hinweg? Der Mechanismus sieht danach aus, ist aber nicht durch einen Test abgesichert.
+- Ist `InjectSecretsRunConfigListenerNx.processStarted` immer schnell genug, um die Secrets aus
+  `NxRunSettings` zu entfernen, bevor ein Nutzer die Run-Config zwischen Start und Prozessende
+  manuell speichert? Aktuell rein by-design angenommen, nicht durch einen Race-Condition-Test
+  verifiziert.
 
 Aktueller Stand der offenen Aufgaben: siehe `docs/todos.md`.

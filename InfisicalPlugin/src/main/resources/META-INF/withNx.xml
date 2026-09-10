@@ -1,0 +1,10 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.nx.InjectSecretsRunConfigurationsExtensionNx"/>
+        <stepsBeforeRunProvider implementation="com.abuscom.infisicalplugin.infisical.injectSecrets.nx.InjectSecretsBeforeRunTaskProviderNx"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="com.abuscom.infisicalplugin.infisical.injectSecrets.nx.InjectSecretsRunConfigListenerNx" topic="com.intellij.execution.ExecutionListener"/>
+    </applicationListeners>
+</idea-plugin>

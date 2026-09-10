@@ -1,45 +1,67 @@
 package com.abuscom.infisicalplugin.infisical.injectSecrets.nx;
 
 import com.intellij.execution.BeforeRunTask;
+import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.util.Key;
-import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class InjectSecretsBeforeRunTaskNx extends BeforeRunTask<InjectSecretsBeforeRunTaskNx> {
-    private static final String PROJECT = "project";
-    private static final String PROJECT_ID = "projectId";
-    private static final String ENVIROMENT  = "environment";
+/**
+ * Persistiert project/projectId/environment ueber {@link PersistentStateComponent} statt ueber die
+ * mit IU-2025.3.5 als {@code @Deprecated} markierten {@link BeforeRunTask#readExternal}/
+ * {@link BeforeRunTask#writeExternal}. Gleiches Muster wie JetBrains' eigenes
+ * {@code com.intellij.ide.browsers.LaunchBrowserBeforeRunTask} (per javap gegen die gebuendelte
+ * app.jar verifiziert): die Basisklasse ueberspringt den alten XML-Attribut-Pfad automatisch,
+ * sobald die Subklasse PersistentStateComponent implementiert.
+ */
+public class InjectSecretsBeforeRunTaskNx extends BeforeRunTask<InjectSecretsBeforeRunTaskNx>
+        implements PersistentStateComponent<InjectSecretsBeforeRunTaskNx.State> {
 
-    public String project;
-    public String projectId;
-    public String environment;
+    public static class State {
+        public String project;
+        public String projectId;
+        public String environment;
+    }
+
+    private State state = new State();
 
     protected InjectSecretsBeforeRunTaskNx(@NotNull Key<InjectSecretsBeforeRunTaskNx> providerId) {
         super(providerId);
     }
 
     @Override
-    public void readExternal(@NotNull Element element) {
-        super.readExternal(element);
-        project = element.getAttributeValue(PROJECT);
-        projectId = element.getAttributeValue(PROJECT_ID);
-        environment = element.getAttributeValue(ENVIROMENT);
+    public @NotNull State getState() {
+        return state;
     }
 
     @Override
-    public void writeExternal(@NotNull Element element) {
-        super.writeExternal(element);
-        if (project != null) {
-            element.setAttribute(PROJECT, project);
-        }
-        if (projectId != null) {
-            element.setAttribute(PROJECT_ID, projectId);
-        }
-        if (environment != null) {
-            element.setAttribute(ENVIROMENT, environment);
-        }
+    public void loadState(@NotNull State state) {
+        this.state = state;
+    }
+
+    public String getProject() {
+        return state.project;
+    }
+
+    public void setProject(String project) {
+        state.project = project;
+    }
+
+    public String getProjectId() {
+        return state.projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        state.projectId = projectId;
+    }
+
+    public String getEnvironment() {
+        return state.environment;
+    }
+
+    public void setEnvironment(String environment) {
+        state.environment = environment;
     }
 
     @Override
@@ -47,12 +69,12 @@ public class InjectSecretsBeforeRunTaskNx extends BeforeRunTask<InjectSecretsBef
     {
         if(!super.equals(o)) return false;
         InjectSecretsBeforeRunTaskNx that = (InjectSecretsBeforeRunTaskNx)o;
-        return Objects.equals(project, that.project) && Objects.equals(projectId, that.projectId)
-                && Objects.equals(environment, that.environment);
+        return Objects.equals(state.project, that.state.project) && Objects.equals(state.projectId, that.state.projectId)
+                && Objects.equals(state.environment, that.state.environment);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), project, projectId, environment);
+        return Objects.hash(super.hashCode(), state.project, state.projectId, state.environment);
     }
 }

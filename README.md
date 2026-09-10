@@ -28,9 +28,8 @@
    ![Alt-Text](docs/ExampleScreenshots/woInstallieren.png)
 2. Über `+` folgende URL eintragen (einmalig):
 
-   ```
-   https://gitlab.abuscom.cloud/api/v4/projects/255/packages/generic/infisical-plugin/repository/updatePlugins.xml
-   ```
+   https://gitlab.abuscom.cloud/api/v4/projects/269/packages/generic/infisical-plugin/repository/updatePlugins.xml
+
    ![Alt-Text](docs/ExampleScreenshots/custompluginrepositories.png)
 
 3. Im Reiter **Marketplace** nach `InfisicalPlugin` suchen und **Install** klicken.
@@ -176,6 +175,49 @@ Für Beiträge am Plugin selbst (nicht nur die Nutzung):
 
 Details zu CI/CD und Release-Ablauf siehe `.gitlab-ci.yml` sowie den `/version`-Skill.
 
+### Eigene Sandbox-Config hinzufügen
+
+`./gradlew runIde` startet nur eine leere Sandbox-IDE ohne geöffnetes Projekt. Zum Testen einer
+konkreten Injection (Gradle, npm, Maven, Python, Nx, ...) braucht es stattdessen eine Sandbox, die
+direkt ein echtes lokales Test-Projekt öffnet. Dafür registriert `InfisicalPlugin/build.gradle.kts`
+für jedes Test-Projekt einen eigenen `runIde`-Task nach folgendem, bereits mehrfach vorhandenem
+Muster:
+
+```kotlin
+intellijPlatformTesting {
+    runIde {
+        register("NAME") {
+            task {
+                args = listOf("pfad/zum/lokalen/test-projekt")
+            }
+        }
+    }
+}
+```
+
+Vorgehen für eine neue Sandbox-Config:
+
+1. Am Dateiende von `build.gradle.kts` liegt bereits ein unausgefüllter Platzhalter-Block mit dem
+   Kommentar `//Für nachfolger hier Sandbox eintragen und neu synchen sollte eine neue run
+   configuration sein:` — entweder diesen Block ausfüllen oder (üblicher, damit der Platzhalter für
+   den nächsten Kollegen erhalten bleibt) einen neuen `intellijPlatformTesting { runIde { register(...) { ... } } }`-Block
+   nach demselben Muster ergänzen.
+2. `register(...)` einen frei wählbaren, **eindeutigen** Namen geben (z. B. `"runIdeTestJavascript"`,
+   `"runISA"`, `"python test"`) — daraus erzeugt Gradle automatisch einen zugehörigen `runIde*`-Task.
+3. `args = listOf("C:/Pfad/zum/Projekt")` ist der einzige Pflichtwert: der absolute Pfad zu einem
+   lokalen Verzeichnis, das die Sandbox-IDE beim Start automatisch als Projekt öffnet — idealerweise
+   ein Projekt, das den Run-Config-Typ enthält, den man gerade testen will (z. B. ein npm-Projekt
+   für die Node-Injection, ein Nx-Monorepo für die Nx-Injection).
+4. Gradle-Projekt neu synchronisieren (Gradle-Tool-Fenster in IntelliJ → Reload-Symbol). Danach
+   erscheint automatisch eine neue Run/Debug-Configuration mit demselben Namen, über die sich die
+   Sandbox-IDE direkt mit dem Testprojekt starten lässt — kein manuelles Anlegen einer
+   Run-Configuration nötig.
+5. **Wichtig:** Diese Pfade sind maschinenspezifisch (alle bestehenden Einträge zeigen aktuell auf
+   `C:/Users/Abuscom/workspace/...`). Für ein eigenes Test-Setup entweder ein eigenes lokales
+   Test-Projekt an dieser Stelle anlegen oder eine eigene, neue `register(...)`-Zeile mit dem
+   eigenen Pfad ergänzen statt bestehende Pfade zu überschreiben — sonst funktionieren die
+   Sandbox-Configs der Kolleg:innen nicht mehr.
+
 ## Weiterentwickeln am Plugin
 
 Für einen tieferen Einstieg vor größeren Änderungen (z. B. Unterstützung einer weiteren Sprache):
@@ -223,6 +265,54 @@ Der einzige zuverlässig erreichbare Interventionspunkt ist deshalb `InjectSecre
 
 Ab **IntelliJ 2026.1** gibt es einen solchen EP: `MavenExecutionConfiguratorProvider` (`org.jetbrains.idea.maven.runner.executionConfigurator`), der eine transiente, mutable Env-Map statt des persistenten Settings-Objekts liefert — deutlich sauberer, aber im `maven.jar` von 2025.3.5/2025.3.6 nachweislich noch nicht enthalten (per `javap` gegen das tatsächlich gecachte JAR verifiziert, nicht nur anhand der GitHub-master-Quellen vermutet). Sobald die Mindest-IDE-Version des Plugins auf 2026.1+ angehoben wird, sollte hierauf migriert werden.
 
+### Nx Console (`NxCommandConfiguration`)
+
+Nx-Console-Run-Configs (`dev.nx.console`, Plugin-Dependency über `withNx.xml`) sind ein
+Sonderfall: Anders als bei Gradle/Spring Boot/npm/Maven/Python bindet `NxCommandConfiguration`
+den generischen "Modify options"-Mechanismus für `RunConfigurationExtension` **gar nicht ein** —
+Checkbox und Environment-Dropdown lassen sich hier also nicht wie bei den anderen Typen anzeigen.
+
+`InjectSecretsRunConfigurationsExtensionNx implements RunConfigurationExtension` existiert zwar
+(`isApplicableFor(...)` liefert `true` für `NxCommandConfiguration`), aber `patchCommandLine(...)`
+und `updateJavaParameters(...)` bleiben laut Code-Kommentar bewusst leer — eine unverifizierte
+Hypothese, dass Nx Console intern eine `GeneralCommandLine`-basierte `CommandLineState` nutzt.
+Mangels Zugriff auf den Nx-Console-Quellcode ließ sich das nicht bestätigen; diese Klasse ist
+aktuell im Wesentlichen ein Platzhalter (siehe Abschnitt "Bekannte Grenzen" in
+[SYSTEM_ARCHITEKTUR.md](SYSTEM_ARCHITEKTUR.md#9-bekannte-grenzen)).
+
+Der tatsächlich wirksame Mechanismus ist ein **Before-Launch-Task** statt einer
+`RunConfigurationExtension`:
+
+1. `InjectSecretsBeforeRunTaskProviderNx extends BeforeRunTaskProvider<...>` registriert einen
+   neuen Eintrag **"Infisical: Secrets injizieren"** in der "Before launch"-Liste jeder
+   Nx-Run-Configuration (Extension Point `com.intellij.stepsBeforeRunProvider`,
+   `createTask(...)` nur für `NxCommandConfiguration`).
+2. Da es kein "Modify options"-Tab gibt, läuft Projekt-/Environment-Auswahl über einen eigenen
+   Dialog: Doppelklick auf den Before-Launch-Eintrag ruft `configureTask(...)` auf, der
+   `InjectSecretsBeforeRunTaskDialogNx` öffnet (Login-Button, Projekt- und Environment-Dropdown —
+   inhaltlich das Pendant zur Checkbox/Dropdown-UI der anderen Run-Typen, nur eben als Dialog statt
+   als Tab). Die Auswahl landet in den Feldern `project`/`environment` von
+   `InjectSecretsBeforeRunTaskNx`, die per eigenem `readExternal`/`writeExternal` persistiert
+   werden — unabhängig vom generischen `InjectSecretsSettings`, das die anderen Run-Typen nutzen.
+3. Die eigentliche Injection passiert in `executeTask(...)`, das vor jedem Start der
+   Nx-Run-Configuration läuft: `Cache.getInstance().setRunConfigSelection(...)` und
+   `Cache.getInstance().setCache(project)` laden die Secrets wie bei den anderen Typen, danach
+   werden sie per `putIfAbsent` in `NxRunSettings.getEnvironmentVariables()` gemergt (manuell in
+   der Run-Config gesetzte Werte werden nicht überschrieben) und über
+   `config.setNxRunSettings(...)` zurückgeschrieben.
+4. **Cleanup nach dem Start:** Weil `NxRunSettings` — wie bei Maven — Teil des persistierbaren
+   Run-Config-Objekts ist, würde ein Speichern der Konfiguration nach dem Start sonst die Secrets
+   im Klartext in die Run-Config-XML schreiben. `InjectSecretsRunConfigListenerNx implements
+   ExecutionListener` reagiert deshalb auf `processStarted` (nicht `processStartScheduled` wie bei
+   Maven/Python) und entfernt alle Keys, die aktuell in `Cache.getInstance().getSecrets()` stehen,
+   wieder aus `NxRunSettings.getEnvironmentVariables()` — die Secrets sind dann nur für die kurze
+   Zeitspanne zwischen Prozessstart-Vorbereitung und tatsächlichem Prozessstart in der
+   Run-Config-Instanz vorhanden.
+
+> **Ungetestet:** Für die Nx-Injection existieren aktuell keine automatisierten Tests (anders als
+> `InjectIntoGradleProcessTest`/`InjectIntoNpmProcessTest`) — das Verhalten ist ausschließlich per
+> Code-Review nachvollzogen, nicht durch einen Sandbox-Rauchtest oder Unit-Tests abgesichert.
+
 ### Python (`AbstractPythonRunConfiguration`)
 
 Python-Run-Configs sind kein `JavaCommandLineState` — es gibt kein `JavaParameters`-Objekt, und
@@ -255,10 +345,3 @@ verifiziert: `com/jetbrains/python/run/AbstractPythonRunConfiguration.class` lie
 `build.gradle.kts` müssen deshalb **beide** Plugins deklariert werden:
 `compatiblePlugin("PythonCore")` und `compatiblePlugin("Pythonid")`.
 
-## Secrets-sammeln
-Anbei eine Checkliste von allen Projekten wo die .env files in der infisical Cloud liegen:
-[]
-[]
-[]
-[]
-[]

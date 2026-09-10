@@ -17,6 +17,6 @@ public class InjectSecretsRunConfigListenerNode implements ExecutionListener {
         }
 
         InjectSecretsSettings settings = InjectSecretsSettings.getOrCreate(config);
-        Cache.getInstance().setRunConfigSelection(settings.enabled, settings.selectedEnvironment);
+        Cache.getInstance().setRunConfigSelection(settings.enabled, settings.selectedProjectId, settings.selectedEnvironment);
     }
 }

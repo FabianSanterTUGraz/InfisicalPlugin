@@ -1,6 +1,9 @@
 package com.abuscom.infisicalplugin.infisical.cache;
 
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretsAPICallResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListRequest;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
 import com.google.gson.Gson;
@@ -13,35 +16,39 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Covers the "tag machine-specific secrets" feature added to Cache.applyEnvironment():
- * a secret whose value looks like a local filesystem path gets tagged in Infisical
- * (PATCH .../secrets/{key} with tagIds) unless it already carries the tag, and the
- * tag itself is only created once (findTagBySlug first, createTag only if missing).
+ * Covers the "tag machine-specific secrets" feature: a secret whose value looks like a local
+ * filesystem path gets tagged in Infisical (PATCH .../secrets/{key} with tagIds) unless it already
+ * carries the tag, and the tag itself is only created once (findTagBySlug first, createTag only if
+ * missing).
+ *
+ * <p>The scan now runs when the Overrides button is pressed (see
+ * InjectSecretsSettingsEditor.openAddOverridesDialog()), not as part of Cache.applyEnvironment()
+ * anymore. These tests exercise the same three static building blocks that call site uses -
+ * Cache.resolveMachineSpecificTag(), Cache.looksLikeUserSpecificPath() and
+ * Cache.tagUserSpecificPath() - wired together the same way, instead of going through the UI.
  */
 class CacheTagOnDetectionTest {
 
     private static final String PROJECT_ID = "proj-1";
     private static final String ENVIRONMENT = "dev";
+    private static final String TOKEN = "token";
     private static final String SLUG = "specificpaths";
     private static final String USER_SPECIFIC_VALUE = "/home/dev/id_rsa";
 
     private final Gson gson = new Gson();
 
     private HttpServer server;
-    private Cache cache;
     private SecretClient secretClient;
 
     private final AtomicInteger createTagCalls = new AtomicInteger();
@@ -49,10 +56,7 @@ class CacheTagOnDetectionTest {
     private final List<String> patchBodies = Collections.synchronizedList(new ArrayList<>());
 
     @BeforeEach
-    void setUp() throws IOException, ReflectiveOperationException {
-        cache = Cache.getInstance();
-        resetEnvironmentState();
-
+    void setUp() throws IOException {
         server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.start();
         secretClient = new SecretClient(new InfisicalHttpClient("http://localhost:" + server.getAddress().getPort()));
@@ -68,7 +72,7 @@ class CacheTagOnDetectionTest {
         stubExistingTag("tag-1");
         stubSecrets(secretJson("PATH_VAR", USER_SPECIFIC_VALUE, List.of()));
 
-        cache.applyEnvironment(PROJECT_ID, ENVIRONMENT, "token", secretClient);
+        tagPathLikeSecrets();
 
         assertEquals(0, createTagCalls.get(), "tag already exists, createTag must not be called");
         assertEquals(List.of("PATH_VAR"), patchedSecretKeys);
@@ -84,7 +88,7 @@ class CacheTagOnDetectionTest {
         stubExistingTag("tag-1");
         stubSecrets(secretJson("PATH_VAR", USER_SPECIFIC_VALUE, List.<String[]>of(new String[]{"tag-1", SLUG})));
 
-        cache.applyEnvironment(PROJECT_ID, ENVIRONMENT, "token", secretClient);
+        tagPathLikeSecrets();
 
         assertTrue(patchedSecretKeys.isEmpty(), "secret already has the tag, no PATCH should be sent");
     }
@@ -94,7 +98,7 @@ class CacheTagOnDetectionTest {
         stubExistingTag("tag-1");
         stubSecrets(secretJson("GREETING", "hello world", List.of()));
 
-        cache.applyEnvironment(PROJECT_ID, ENVIRONMENT, "token", secretClient);
+        tagPathLikeSecrets();
 
         assertTrue(patchedSecretKeys.isEmpty(), "value does not look like a path, must not be tagged");
     }
@@ -104,13 +108,28 @@ class CacheTagOnDetectionTest {
         stubTagMissingThenCreated("new-tag-id");
         stubSecrets(secretJson("PATH_VAR", USER_SPECIFIC_VALUE, List.of()));
 
-        cache.applyEnvironment(PROJECT_ID, ENVIRONMENT, "token", secretClient);
+        tagPathLikeSecrets();
 
         assertEquals(1, createTagCalls.get());
         assertEquals(List.of("PATH_VAR"), patchedSecretKeys);
 
         JsonObject body = gson.fromJson(patchBodies.get(0), JsonObject.class);
         assertEquals("new-tag-id", body.getAsJsonArray("tagIds").get(0).getAsString());
+    }
+
+    /**
+     * Mirrors InjectSecretsSettingsEditor.openAddOverridesDialog(): resolve the tag once, fetch all
+     * secrets, then tag every one whose value looks like a local filesystem path.
+     */
+    private void tagPathLikeSecrets() throws InfisicalHttpException {
+        SecretsAPICallResponse response = secretClient.secrets(PROJECT_ID, ENVIRONMENT, TOKEN);
+        TagListRequest tag = Cache.resolveMachineSpecificTag(PROJECT_ID, TOKEN, secretClient);
+
+        for (SecretEntry entry : response.secrets()) {
+            if (Cache.looksLikeUserSpecificPath(entry.secretValue())) {
+                Cache.tagUserSpecificPath(entry, secretClient, PROJECT_ID, ENVIRONMENT, TOKEN, tag);
+            }
+        }
     }
 
     private void stubExistingTag(String tagId) {
@@ -199,16 +218,5 @@ class CacheTagOnDetectionTest {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
         }
-    }
-
-    // Cache is a process-wide singleton (see Cache.getInstance()) - reset its private
-    // "environment" field between tests so one test's applyEnvironment calls don't leak into
-    // the next (mirrors the reflection-based cleanup in CacheEnvironmentSwitchTest).
-    private void resetEnvironmentState() throws ReflectiveOperationException {
-        Field environmentField = Cache.class.getDeclaredField("environment");
-        environmentField.setAccessible(true);
-        environmentField.set(cache, "");
-
-        cache.getSecrets().clear();
     }
 }

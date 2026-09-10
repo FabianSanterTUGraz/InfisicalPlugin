@@ -8,11 +8,17 @@ import com.abuscom.infisicalplugin.infisical.cache.Enviroments.EnvironmentEntry;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectEntry;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.ListProjects.ListProjectsResponse;
 import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretClient;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretEntry;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.SecretsAPICallResponse;
+import com.abuscom.infisicalplugin.infisical.cache.Secrets.Tagging.TagListRequest;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient;
 import com.abuscom.infisicalplugin.infisical.http.InfisicalHttpException;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.NewEnvironment;
+import com.abuscom.infisicalplugin.infisical.injectSecrets.UiElements.AddOverrides;
 import com.abuscom.infisicalplugin.infisical.login.TokenChangeListener;
 import com.abuscom.infisicalplugin.infisical.login.TokenManager;
 import com.intellij.execution.configurations.RunConfigurationBase;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.options.SettingsEditor;
@@ -29,31 +35,105 @@ import java.awt.event.ItemEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.intellij.icons.AllIcons;
+
+import static com.abuscom.infisicalplugin.infisical.http.InfisicalHttpClient.DEFAULT_BASE_URL;
 
 public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfigurationBase<?>> implements TokenChangeListener {
 
     private final ComboBox<String> environmentComboBox = new ComboBox<>(InjectSecretsSettings.ENVIRONMENTS);
     private final ComboBox<String> projectComboBox = new ComboBox<>(InjectSecretsSettings.PROJECTS);
+
     private final JButton loginButton = new JButton("Login");
-    private RunConfigurationBase<?> configuration;
+    private final JButton linkButton  = new JButton(AllIcons.General.Information);
+    private final JButton accessControlButton = new JButton("Access Control");
+    private final JButton newEnvironmentButton = new JButton("Neues environment erstellen");
+    private final JButton overridesButton = new JButton("Overrides");
+
+    private static RunConfigurationBase<?> configuration;
     private JPanel rootPanel;
+
     private volatile boolean environmentsLoaded = false;
     private volatile boolean projectsLoaded = false;
     private volatile boolean suppressProjectSelectionEvents = false;
-    private  Map<String,String> projectNameToId = new HashMap<>();
 
-    public InjectSecretsSettingsEditor() {
+    private  Map<String,String> projectNameToId = new HashMap<>();
+    //hardcoded falls sich die organisation ändern sollte hier anpassen:
+    private static String urlToProjectView = DEFAULT_BASE_URL + "/organizations/0274562c-e57c-41be-9831-9d100282e992/projects/secret-management/";
+    private String ProjectId;
+
+    public InjectSecretsSettingsEditor(){
+        linkButton.addActionListener(e -> openInfisicalDashboardSpecificURL("overview"));
+        accessControlButton.addActionListener(e -> openInfisicalDashboardSpecificURL("/access-management?selectedTab=members"));
         loginButton.addActionListener(e -> new LoginUser().login(configuration.getProject()));
+        newEnvironmentButton.addActionListener(e -> new NewEnvironment(configuration != null ? configuration.getProject() : null).show());
+        overridesButton.addActionListener(e -> openAddOverridesDialog());
+
         TokenManager.getInstance().addTokenChangeListener(this);
+
         projectComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED && !suppressProjectSelectionEvents) {
                 onProjectSelected();
             }
         });
 
+        projectComboBox.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXX"); //Für das padding im Run config selbst.
+        environmentComboBox.setPrototypeDisplayValue("XXXXXXXXXXXX");
+
         updateLoginButtonVisibility(TokenManager.getInstance().getTokenFromKeypass());
+    }
+
+    private void openAddOverridesDialog() {
+        if (configuration == null) {
+            return;
+        }
+        Project currentProject = configuration.getProject();
+        String currentProjectId = (String) projectComboBox.getSelectedItem() != null
+                ? projectNameToId.get(projectComboBox.getSelectedItem())
+                : null;
+        String currentEnvironment = (String) environmentComboBox.getSelectedItem();
+
+        if (currentProjectId == null || currentEnvironment == null) {
+            ErrorNotifier.notify(currentProject, "Kein Projekt/Environment ausgewählt!");
+            return;
+        }
+        if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(currentProject, "No valid jwt-Token given!(not logged in or expired)");
+            return;
+        }
+        String token = TokenManager.getInstance().getTokenFromKeypass();
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            InfisicalHttpClient httpClient = new InfisicalHttpClient(DEFAULT_BASE_URL);
+            SecretClient secretClient = new SecretClient(httpClient);
+
+            try {
+                SecretsAPICallResponse all = secretClient.secrets(currentProjectId, currentEnvironment, token);
+                TagListRequest tag = Cache.resolveMachineSpecificTag(currentProjectId, token, secretClient);
+                for (SecretEntry entry : all.secrets()) {
+                    if (Cache.looksLikeUserSpecificPath(entry.secretValue())) {
+                        Cache.tagUserSpecificPath(entry, secretClient, currentProjectId, currentEnvironment, token, tag);
+                    }
+                }
+
+                List<SecretEntry> taggedSecrets = secretClient.secretsWithTag(currentProjectId, currentEnvironment, token);
+                Map<String, String> currentValues = new LinkedHashMap<>();
+                for (SecretEntry entry : taggedSecrets) {
+                    currentValues.put(entry.secretKey(), entry.secretValue());
+                }
+                ApplicationManager.getApplication().invokeLater(
+                        () -> new AddOverrides(currentProject, currentProjectId, currentEnvironment, currentValues).show(),
+                        ModalityState.any());
+            } catch (InfisicalHttpException e) {
+                ApplicationManager.getApplication().invokeLater(
+                        () -> ErrorNotifier.notify(currentProject, e),
+                        ModalityState.any());
+            }
+        });
     }
 
     @Override
@@ -89,12 +169,24 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         loadProjects();
     }
 
+    public static void openInfisicalDashboardSpecificURL(String URL) {
+        if(!Cache.getInstance().infisicalJsonExists(configuration.getProject()))
+        {
+            BrowserUtil.browse(urlToProjectView);
+            return;
+        }
+
+        String workspaceId =  resolveInfisicalJsonValue("workspaceId");
+        BrowserUtil.browse(urlToProjectView  + workspaceId + "/" + URL);
+    }
+
     private void loadProjects()
     {
         if (configuration == null) {
             return;
         }
         if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
         String token = TokenManager.getInstance().getTokenFromKeypass();
@@ -147,7 +239,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
      * wird das still ignoriert; existiert die Datei aber und laesst sich trotzdem nicht lesen,
      * bekommt der User eine Fehlermeldung.
      */
-    private String resolveInfisicalJsonValue(String key) {
+    private static String resolveInfisicalJsonValue(String key) {
         Project project = configuration.getProject();
         try {
             return Cache.readConfig(project, ".infisical.json").get(key);
@@ -170,17 +262,20 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
     }
 
     /**
-     * .infisical.json gewinnt immer, wenn der Wert in den aktuell verfuegbaren Optionen vorkommt.
-     * Nur wenn das nicht aufloesbar ist (Datei fehlt/Wert veraltet), zaehlt die zuletzt
-     * gespeicherte Auswahl dieser Run-Configuration.
+     * Die zuletzt gespeicherte Auswahl dieser Run-Configuration gewinnt immer, wenn sie in den
+     * aktuell verfuegbaren Optionen vorkommt. .infisical.json wird nur als Fallback herangezogen,
+     * solange diese Run-Configuration noch nie eine eigene Auswahl gespeichert hat (z.B. frisch
+     * angelegt) - sonst wuerde eine andere Run-Configuration, die zuletzt ein anderes Projekt in die
+     * (projektweit geteilte) .infisical.json geschrieben hat, die hier bereits getroffene Auswahl
+     * überschreiben.
      */
     private static String pickPreselection(String fromInfisicalJson, String fromRunConfig, String[] options) {
         List<String> available = Arrays.asList(options);
-        if (fromInfisicalJson != null && available.contains(fromInfisicalJson)) {
-            return fromInfisicalJson;
-        }
         if (fromRunConfig != null && available.contains(fromRunConfig)) {
             return fromRunConfig;
+        }
+        if (fromInfisicalJson != null && available.contains(fromInfisicalJson)) {
+            return fromInfisicalJson;
         }
         return null;
     }
@@ -193,14 +288,14 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         if (selectedName == null) {
             return;
         }
-        String id = projectNameToId.get(selectedName);
-        if (id == null) {
+        ProjectId = projectNameToId.get(selectedName);
+        if (ProjectId == null) {
             return;
         }
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             try {
-                Cache.writeConfig(configuration.getProject(), ".infisical.json", id);
+                Cache.writeConfig(configuration.getProject(), ".infisical.json", ProjectId);
             } catch (IOException e) {
                 ApplicationManager.getApplication().invokeLater(
                         () -> ErrorNotifier.notify(configuration.getProject(), e),
@@ -216,6 +311,7 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
             return;
         }
         if (!TokenManager.getInstance().isTokenValid()) {
+            ErrorNotifier.notify(configuration.getProject(),"No valid jwt-Token given!(not logged in or expired)");
             return;
         }
         String token = TokenManager.getInstance().getTokenFromKeypass();
@@ -261,17 +357,31 @@ public class InjectSecretsSettingsEditor extends SettingsEditor<RunConfiguration
         }
         if(projectsLoaded) {
             settings.selectedProject = (String) projectComboBox.getSelectedItem();
+            settings.selectedProjectId = projectNameToId.get(settings.selectedProject);
         }
     }
 
     @Override
     protected @NotNull JComponent createEditor() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.add(new JLabel("Projekt/Environment auswählen"));
-        panel.add(projectComboBox);
-        panel.add(environmentComboBox);
-        panel.add(loginButton);
+        JPanel topRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topRow.add(new JLabel("Projekt/Environment"));
+        topRow.add(projectComboBox);
+        topRow.add(environmentComboBox);
+        topRow.add(loginButton);
+        topRow.add(linkButton);
+
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomRow.add(accessControlButton);
+        bottomRow.add(newEnvironmentButton);
+        bottomRow.add(overridesButton);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(topRow);
+        panel.add(bottomRow);
+
         rootPanel = panel;
+        panel.add(Box.createVerticalGlue());
         return panel;
     }
 }

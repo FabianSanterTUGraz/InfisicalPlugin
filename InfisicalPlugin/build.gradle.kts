@@ -30,6 +30,7 @@ dependencies {
         bundledPlugin("org.jetbrains.idea.maven")
         compatiblePlugin("PythonCore")
         compatiblePlugin("Pythonid")
+        compatiblePlugin("dev.nx.console")
     }
 }
 
@@ -157,6 +158,18 @@ intellijPlatformTesting {
         register("Marketplace") {
             task {
                 args = listOf("C:/Users/Abuscom/Desktop/demonstration_marketplace/some_project")
+            }
+        }
+    }
+}
+
+//Für nachfolger hier Sandbox eintragen und neu synchen sollte eine neue run configuration sein:
+//einfach ein project eingeben wo man den aktuellen Stand des plugins drauflanden will.
+intellijPlatformTesting {
+    runIde {
+        register("NAME ") {
+            task {
+                args = listOf("hier/den/pfad/zur/zu/testenden/directory/eingeben")
             }
         }
     }

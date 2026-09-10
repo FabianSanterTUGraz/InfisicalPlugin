@@ -23,8 +23,6 @@ Beim Arbeiten mit Infisical müssen zwei Voraussetzungen erfüllt sein:
   infisical init
   ```
 
-Für die genaue Referenz siehe das README in [infisicalplugin](https://gitlab.abuscom.cloud/fabian.santer/infisicalplugin).
-
 2. Env-Dateien in Infisical hochladen, falls das noch nicht passiert ist.
 
 3. Ausführen mit:

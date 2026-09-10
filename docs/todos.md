@@ -34,6 +34,7 @@
 - [x] #21 CHANGELOG.md für das Release befüllen (aktuell nur leerer `## [Unreleased]`-Abschnitt)
 - [x] #22 `development` in `main` mergen und sicherstellen, dass die GitLab-CI-Pipeline (test, verifyPlugin) grün durchläuft, bevor getaggt wird
 - [x] #23 Release-Tag setzen (z.B. `v1.0.8`), um `buildPlugin`/`publishPlugin` auszulösen (`/version`)
+- [x] #27 Package Registry der neuen GitLab-Projekt-ID 269 (`abuscom/infisicalplugin`) ist anonym nicht erreichbar (HTTP 401, verifiziert per curl) — Projekt liegt jetzt in der Gruppe `abuscom` statt im alten öffentlichen Personal-Namespace (Projekt 255, HTTP 200). Admin-Zugriff auf die GitLab-Projekteinstellungen fehlt Fabian; jemand mit Owner/Maintainer-Rechten auf `abuscom/infisicalplugin` muss unter Settings > General > Visibility entweder die "Package registry"-Sichtbarkeit separat auf "Everyone With Access" stellen oder das Projekt public machen, danach README.md auf Projekt-ID 269 aktualisieren → [erkenntnis](../InfisicalPlugin/erkenntnisse/2026-09-02-wartungsrisiken-langzeitbetrieb.md)
 
 ## Dokumentation
 

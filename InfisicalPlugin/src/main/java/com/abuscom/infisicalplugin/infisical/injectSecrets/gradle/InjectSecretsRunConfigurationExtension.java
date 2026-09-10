@@ -72,7 +72,6 @@ public class InjectSecretsRunConfigurationExtension extends RunConfigurationExte
 
     @Override
     public <T extends RunConfigurationBase<?>> void updateJavaParameters(T configuration,
-                                                                          JavaParameters javaParameters,
-                                                                          RunnerSettings runnerSettings) throws ExecutionException {
+                                                                          JavaParameters javaParameters, RunnerSettings runnerSettings) throws ExecutionException {
     }
 }
